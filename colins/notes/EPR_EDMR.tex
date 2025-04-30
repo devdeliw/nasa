@@ -1,0 +1,318 @@
+\documentclass[svgnames]{article}    
+
+\usepackage{graphicx}                 
+
+% -- math                               
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{esint}
+\usepackage{geometry}
+
+% -- noindent
+\setlength\parindent{0pt}
+
+% -- images
+%\graphicspath{{ }}                   
+
+% -- tikz
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.15}
+\usepackage{comment}
+\usetikzlibrary{arrows}
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{mybox}{
+    enhanced,
+    boxrule=0pt,frame hidden,
+    colback=green!10!white,
+    sharp corners
+}
+
+% -- figures
+
+
+% -- figures
+\usepackage{float}
+\usepackage{caption}
+\usepackage{lipsum}
+
+% -- start 
+\title{Electron Paramagnetic Resonance and Electrically Detected Magnetic
+Resonance}
+\author{Deval Deliwala}
+%\date{}          
+
+\begin{document}
+\maketitle
+\newpage 
+
+\section{Electron Paramagnetic Resonance (EPR)} 
+
+\subsection{Zeeman Effect} 
+
+The intrinsic $|\frac{1}{2}, m_s \in \{\frac{1}{2}, -\frac{1}{2}\} \rangle$ spin of an electron gives rise to an
+electron's magnetic moment. 
+
+\[
+    \vec{\mu}_e = \gamma \vec{S} = g_e \mu_B \vec{S}. 
+\] \vspace{3px}
+
+where $\mu_e$ is the magnetic moment of the electron, $\gamma$ is the
+gyromagnetic ratio, $g_e$ is the Lande factor, and $\mu_B$ is the Bohr
+magneton.\\ 
+
+For an unperturbed electron, the Hamiltonian is given by 
+
+\[
+    H = -\vec{\mu} \cdot \vec{B} = -\gamma \vec{B} \cdot S.
+\] \vspace{3px}
+
+Therefore, the energy levels can be computed via 
+
+\[
+    E = -\vec{\mu}_e \cdot \vec{B} = g\mu_B \vec{S} \cdot \vec{B}.
+\] \vspace{3px}
+
+In a reference frame aligned with the magnetic field $\vec{B}$, the equation
+simplifies to 
+
+\[ E = -\vec{\mu}_e \cdot \vec{B} = g_e \mu_B S_Z B_0 \] \vspace{3px}
+
+where $S_Z$ is the magnitude of the electron spin projected onto the $z$ axis
+($+1/2$ or $-1/2$ ) and $B_0$ is the strength of the $\vec{B}$ field in the $z$
+direction. Hence, there exists an energy difference between electrons of
+different spin orientations. 
+
+\[
+\Delta E = g_e \mu_B B_0.
+\] \vspace{3px}
+
+This is known as the \textit{Zeeman Effect}. The energy splitting is
+proportional to the applied magnetic field. Electrons in one of these states can
+absorb and release energy to switch, or `flip' between spin states. \\
+
+In EPR, this is achieved by exposing the electron to electromagnetic radiation.
+The resonance energy required to flip an isolated electron is given by 
+
+ \[
+\Delta E = h\nu = g_e \mu_B B_0.
+\] \vspace{3px}
+
+However, this is for a free electron isolated from its surroundings. Unpaired
+electrons in real materials deviate from this idealized situation. 
+
+\subsection{EPR Response} 
+
+In conventional EPR, a sample with paramagnetic centers is placed into a
+microwave cavity of high quality/Q factor. A standing wave is set up in this
+cavity to provide an oscillating $B$ field of frequency $\nu$. The cavity is
+placed in a large slowly varying magnetic field. Resonance is detected when the
+applied microwave radiation is absorbed by the sample, causing the Q factor of
+the cavity to change. \\
+
+The change in Q causes a change in the reflected power back to a diode in the
+microwave bridge. An absorption spectrum is measured when the reflected
+microwave power is plotted against the slowly varying magnetic field. \\
+
+In a perfectly balanced system (infinite spin temperature) where there are an
+equal number of spin up and spin down state, stimulated emission and absorption
+would occur at the same rate and cancel each other. Hence, measuring the EPR
+response is related to the spin polarization.  \\
+
+The ratio of the number of spins in the up and down state for free and isolated
+electrons can be approximated by 
+
+\[
+    \frac{N_+}{N_-} = \text{exp} \left( \frac{-g_e \mu_B B_0}{k_B T} \right)
+    \approx 1 - \frac{g_e \mu_B B_0}{k_B T}. 
+\] \vspace{3px}
+
+Hence, increasing $B_0$ and decreasing $T$ increases spin polarization. This
+ratio is approximately 1 if the Lande factor for the detect in question is
+close to free electron, implying there is an equal balance of spin up and spin
+down. This level of polarization is still high enough to detect approximately
+$10^10$ paramagnetic sites. 
+
+\subsection{Spin Relaxation}
+
+As spins flip due to exposure to radiation satisfying the resonance condition,
+they also interact with their local environment. Electron spins can return to
+their original state via spin relaxation. \\
+
+The time it takes for a spin system out of equilibrium to relax back to its
+equilibrium is described by spin-lattice-relaxation time, $T_1$. Increased
+electron coupling to the lattice results in lower $T_1$. Electron spins can
+interact with each other causing them to precess at slightly
+different rates, becoming de-phased over a spin-spin relaxation time, $T_2$. 
+
+
+\subsection{Spin Orbit Coupling} 
+
+The electron's magnetic moment is described by both terms, 
+
+\[
+    \vec{\mu}_e = g\mu_B \vec{S} + \mu_B \vec{L}.
+\] \vspace{3px}
+
+
+The electron `orbiting' the nucleus acts as a small current loop which in turn
+generates its own magnetic field around the loop. However, in the electron
+frame, the nucleus is the one revolving around \textit{it}, which alters this
+magnetic moment. This is called \textit{spin-orbit coupling}. \\ 
+
+The amount of spin-orbit coupling experienced is measured as a change in the
+$g$. The $\vec{g}$ factor is a second-rank tensor that is anisotropic. 
+
+\[
+    \vec{g} = \begin{pmatrix}
+        g_{xx} & g_{xy} & g_{xz} \\ 
+        g_{yx} & g_{yy} & g_{yz} \\ 
+        g_{zx} & g_{zy} & g_{zz} \\ 
+    \end{pmatrix}.
+\] \vspace{3px}
+
+\subsection{Hyperfine Interactions}
+
+Atomic nuclei can also possess spin angular momentum, though not all do. The
+spin angular momentum, $\vec{I}$ alters the resonance condition of an electron
+in a paramagnetic site. Unlike electrons, which all have spin $1/2$, the nuclear
+spin depends on the \# of protons and neutrons in the nucleus. The magnetic
+moment of the nuclear spin angular momentum is described by 
+
+\[
+    \vec{\mu}_N = g_N \mu_N \vec{I}
+\] \vspace{3px}
+
+
+where $g_N$ is the nuclear $g$ factor, and $\mu_N$ is the nuclear Bohr magneton.
+A paramagnetic electron close to a nucleus with a nuclear magnetic moment
+experiences a local magnetic field from the nucleus that differs from the
+externally applied field. The interaction between electrons and nearby magnetic
+nuclei is known as the \textit{nuclear hyperfine interaction} and is
+characterized by a splitting of the measured EPR spectrum into two or more
+lines. The Hamiltonian then becomes 
+
+\[
+    \hat{H} = \mu_B \vec{B} \cdot \vec{g} \cdot \vec{S} + \sum_{i}^{} \vec{I}_i
+    \cdot \vec{A}_i \cdot \vec{S}. 
+\] \vspace{3px}
+
+where $\vec{I}_i$ is the nuclear spin operator for each nucleus and $\vec{A}_i$
+is the hyperfine tensor for each nucleus. 
+
+\subsection{EDMR} 
+
+The most common EDMR experiments involve changes in spin dependent currents due
+to recombination or tunneling. This has higher sensitive, with orders-of-magnitude 
+less defects. \\ 
+
+The detection scheme for EDMR relies on changes in the electrical
+characteristics of a sample as it undergoes magnetic resonance. An electrical
+connection must be made to the sample in the microwave cavity and a
+current-to-voltage converter is used with a biasing circuit. \\ 
+
+Measured EDMR spectra are generated by plotting the change in the electrical
+current through the sample as a function of the slowly varied magnetic field,
+$B_0$. The two primary spin dependent currents measured are spin-dependent
+recombination (SDR) and spin-dependent trap assisted tunneling (SDTAT). 
+
+\subsection{Spin Dependent Recombination} 
+
+Electrons and holes can be captured by deep level defects within the bandgap.
+When an electron in the conduction band and an electron in a paramagnetic defect
+are polarized in the same direction, the conduction band electron cannot be
+captured due to the Pauli-Exclusion Principle. \\
+
+The electron in the trap can be flipped during magnetic resonance, converting
+what was a triplet state into a
+singlet state, making the previously forbidden transition possible. The
+conduction electron can now be captured by the deep level defect and recombine
+with a hole from the valence band. An increased number of recombination events
+during magnetic resonance causes a measurable change in the steady state
+current. \\ 
+
+\subsection{Spin Dependent Trap Assisted Tunneling} 
+
+SDTAT is an EDMR measurement that relies on the spin-dependent nature of VRH
+currents, where electrons can hope between localized states via quantum
+tunneling. Electrons cannot tunnel to a site with a same polarized electron
+however. The electron can be flipped at magnetic resonance, thus allowing it to
+tunnel to the next site. This change in tunneling current through the material
+is measured during SDTAT and gives rise to the EDMR spectra associated with
+defects. 
+
+\newpage 
+\section{NZFMR Mechanics} 
+
+The density operator for a simple two-site model with an ensemble of $N$ spins
+can be written as: 
+
+\[ \rho = \frac{1}{N}\sum_{n=1}^{N} | \psi_N \rangle \langle \psi_N |.
+\]\vspace{3px} 
+
+
+Choosing an orthonormal basis set $\varphi_i$ allows us to define the density
+matrix as: 
+
+\[
+    \rho_{i,j} = \langle \varphi_i | \rho | \varphi_j \rangle. 
+\] \vspace{3px}
+
+The system evolves coherently over time as the spins precess according to the
+time-dependent Schrodinger equation and is described by the quantum Liouville
+equation: 
+
+\[
+    \frac{\partial \rho}{\partial t} = -\frac{i}{\hbar} \left[\hat{H},
+    \rho\right]. 
+\] \vspace{3px}
+
+
+For a system in which spin pairs are formed and removed over time, it is
+necessary to include these phenomena in the equation governing the time
+evolution of the system. This is achieved by using the stochastic Liouville
+equation (SLE): 
+
+\[
+    \frac{\partial \rho}{\partial t} = -\frac{i}{\hbar} \left[H, \rho\right] -
+    \frac{1}{2} \{\Lambda,\rho\} + \Gamma.
+\] \vspace{3px}
+
+where $\{\Lambda, \rho\}$ is the anticommutator of the projection operator
+$\Lambda$ and $\rho$. The first term is the coherent time evolution with no
+perturbations. The second term is a dissipative term that removes spin pairs
+from the system. The last term is a generation term. 
+
+\subsection{Electron-Hole SDR for NZFMR} 
+
+An electron in the conduction band approaches a deep level defect with an
+unoccupied electron near a nucleus of nuclear spin and an associated hyperfine
+field.The free electron can be temporarily captured in an intermediate state
+just below the conduction band where it can \textit{attempt} to enter the
+defect. If the free electron and defect electron are a singlet state, the free
+electron can be captured. Unlike in EDMR, the transition from triplet to singlet
+does not come from impinging electromagnetic radiation, but from spin mixing of
+the defect electron due to local magnetic fields. \\ 
+
+If a singlet is formed due to spin mixing, the free electron drops into the deep
+levels and recombines with a hole in the valence band, removing the electron and
+hole from the system. This essentially annihilates the spins, hence an
+additional requirement for defect and free electron spins to be antiparallel --
+spin angular momentum conservation. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
