@@ -1,0 +1,139 @@
+\documentclass[a4paper,landscape]{article}
+\usepackage{graphicx}                 
+
+% -- math                               
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{esint}
+
+% -- noindent
+\setlength\parindent{0pt}
+\usepackage[a4paper,margin=0.2in,landscape]{geometry}
+
+\begin{document}
+
+\small
+\[\scalebox{0.4}{
+    $
+    H_{\text{{HF}}_\text{coupled} } = \left[\begin{array}{cccccccccccccccc}\frac{\hbar^2\left(A_{a1z} + A_{a2z} + A_{b1z} + A_{b2z}\right)}{4} & 0 & 0 & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(- A_{a2x} + A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(- A_{a1x} + A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & 0 & 0 & 0 & 0 & 0\\0 & \frac{\hbar^2\left(A_{a1z} - A_{a2z} + A_{b1z} - A_{b2z}\right)}{4} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(- A_{a2x} - A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(- A_{a1x} + A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & 0 & 0 & 0 & 0\\0 & 0 & \frac{\hbar^2\left(- A_{a1z} + A_{a2z} - A_{b1z} + A_{b2z}\right)}{4} & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(- A_{a1x} - A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(- A_{a2x} + A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & 0 & 0 & 0 & 0\\0 & 0 & 0 & - \frac{\hbar^2\left(A_{a1z} + A_{a2z} + A_{b1z} + A_{b2z}\right)}{4} & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(- A_{a1x} - A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(- A_{a2x} - A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & 0 & 0 & 0 & 0 & 0\\0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & 0 & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a1z} + A_{a2z} - A_{b1z} - A_{b2z}\right)}{4} & 0 & 0 & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & 0\\\frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & 0 & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a1z} - A_{a2z} - A_{b1z} + A_{b2z}\right)}{4} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} + A_{b1x} - A_{b1y}\right)}{8}\\\frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & 0 & 0 & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(- A_{a1z} + A_{a2z} + A_{b1z} - A_{b2z}\right)}{4} & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} + A_{b2x} - A_{b2y}\right)}{8}\\0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(- A_{a1z} - A_{a2z} + A_{b1z} + A_{b2z}\right)}{4} & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & 0\\0 & \frac{\sqrt{2} \hbar^2\left(- A_{a2x} - A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(- A_{a1x} - A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & 0 & \frac{\hbar^2\left(A_{a1z} + A_{a2z} - A_{b1z} - A_{b2z}\right)}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} - A_{b2x} + A_{b2y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} - A_{b1x} + A_{b1y}\right)}{8} & 0\\\frac{\sqrt{2} \hbar^2\left(- A_{a2x} + A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(- A_{a1x} - A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & 0 & \frac{\hbar^2\left(A_{a1z} - A_{a2z} - A_{b1z} + A_{b2z}\right)}{4} & 0 & 0 & 0 & 0 & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} - A_{b2x} - A_{b2y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} - A_{b1x} + A_{b1y}\right)}{8}\\\frac{\sqrt{2} \hbar^2\left(- A_{a1x} + A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(- A_{a2x} - A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & 0 & 0 & \frac{\hbar^2\left(- A_{a1z} + A_{a2z} + A_{b1z} - A_{b2z}\right)}{4} & 0 & 0 & 0 & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} - A_{b1x} - A_{b1y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} - A_{b2x} + A_{b2y}\right)}{8}\\0 & \frac{\sqrt{2} \hbar^2\left(- A_{a1x} + A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(- A_{a2x} + A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(- A_{a1z} - A_{a2z} + A_{b1z} + A_{b2z}\right)}{4} & 0 & 0 & 0 & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} - A_{b1x} - A_{b1y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} - A_{b2x} - A_{b2y}\right)}{8} & 0\\0 & 0 & 0 & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} - A_{b2x} - A_{b2y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} - A_{b1x} - A_{b1y}\right)}{8} & 0 & - \frac{\hbar^2\left(A_{a1z} + A_{a2z} + A_{b1z} + A_{b2z}\right)}{4} & 0 & 0 & 0\\0 & 0 & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} + A_{b1x} + A_{b1y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} - A_{b2x} + A_{b2y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} + A_{a1y} - A_{b1x} - A_{b1y}\right)}{8} & 0 & \frac{\hbar^2\left(- A_{a1z} + A_{a2z} - A_{b1z} + A_{b2z}\right)}{4} & 0 & 0\\0 & 0 & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} + A_{b2x} + A_{b2y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} - A_{b1x} + A_{b1y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a2x} + A_{a2y} - A_{b2x} - A_{b2y}\right)}{8} & 0 & 0 & \frac{\hbar^2\left(A_{a1z} - A_{a2z} + A_{b1z} - A_{b2z}\right)}{4} & 0\\0 & 0 & 0 & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} + A_{b1x} - A_{b1y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} + A_{b2x} - A_{b2y}\right)}{8} & 0 & 0 & \frac{\sqrt{2} \hbar^2\left(A_{a1x} - A_{a1y} - A_{b1x} + A_{b1y}\right)}{8} & \frac{\sqrt{2} \hbar^2\left(A_{a2x} - A_{a2y} - A_{b2x} + A_{b2y}\right)}{8} & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a1z} + A_{a2z} + A_{b1z} + A_{b2z}\right)}{4}\end{array}\right]
+    $
+}
+\]
+
+\begin{align*}
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle
+\end{align*}
+
+
+\small
+\[
+\scalebox{0.55}{$
+H_{\text{HF,iso}} =
+\left[
+\begin{array}{cccccccccccccccc}
+\frac{\hbar^{2}\!\left(Aa_{1}+Aa_{2}+Ab_{1}+Ab_{2}\right)}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+0 & \frac{\hbar^{2}\!\left(Aa_{1}-Aa_{2}+Ab_{1}-Ab_{2}\right)}{4} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 
+-\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 &
+-\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 & 0 & 0 & 0\\
+0 & 0 & \frac{\hbar^{2}\!\left(-Aa_{1}+Aa_{2}-Ab_{1}+Ab_{2}\right)}{4} & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 
+-\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 & 0 &
+-\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 & 0 & 0\\
+0 & 0 & 0 & -\frac{\hbar^{2}\!\left(Aa_{1}+Aa_{2}+Ab_{1}+Ab_{2}\right)}{4} &
+0 & \frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 &
+-\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} &
+-\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 & 0 & 0 & 0\\
+0 & \frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 &
+0 & 0 & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Aa_{2}-Ab_{1}-Ab_{2}\right)}{4} & 0 & 0 & 0 & 0 &
+0 & 0 & 0\\
+0 & 0 & 0 & \frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 &
+0 & 0 & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}-Aa_{2}-Ab_{1}+Ab_{2}\right)}{4} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}}\\
+0 & 0 & 0 & \frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 & 0 & 0 & 0 & 0 &
+\frac{\hbar^{2}\!\left(-Aa_{1}+Aa_{2}+Ab_{1}-Ab_{2}\right)}{4} & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}}\\
+0 & \frac{-\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} &
+\frac{-\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &
+\frac{\hbar^{2}\!\left(-Aa_{1}-Aa_{2}+Ab_{1}+Ab_{2}\right)}{4} & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0\\
+0 & 0 & 0 & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{-\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} &
+\frac{-\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 &
+-\frac{\hbar^{2}\!\left(Aa_{1}+Aa_{2}+Ab_{1}+Ab_{2}\right)}{4} & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & \frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 &
+\frac{\hbar^{2}\!\left(-Aa_{1}+Aa_{2}-Ab_{1}+Ab_{2}\right)}{4} & 0 & 0\\
+0 & 0 & 0 & 0 & \frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}-Aa_{2}+Ab_{1}-Ab_{2}\right)}{4} & 0\\
+0 & 0 & 0 & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Ab_{1}\right)}{4\sqrt{2}} &
+\frac{\hbar^{2}\!\left(Aa_{2}+Ab_{2}\right)}{4\sqrt{2}} & 0 & 0 & 0 & 0 &
+\frac{\hbar^{2}\!\left(Aa_{1}+Aa_{2}+Ab_{1}+Ab_{2}\right)}{4}
+\end{array}
+\right]
+$}
+\]
+
+
+\newpage 
+
+\[\scalebox{0.34}{$
+    H_{\text{{HF}}_\text{zeeman} } = \left[\begin{array}{cccccccccccccccc}\hbar^2\left(\frac{A_{a1z}}{4} + \frac{A_{a2z}}{4} + \frac{A_{b1z}}{4} + \frac{A_{b2z}}{4}\right) & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{b2x} - A_{b2y}\right)}{4} & \frac{\hbar^2\left(A_{b1x} - A_{b1y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{a2x} - A_{a2y}\right)}{4} & \frac{\hbar^2\left(A_{a1x} - A_{a1y}\right)}{4} & 0 & 0 & 0 & 0 & 0\\0 & \hbar^2\left(\frac{A_{a1z}}{4} - \frac{A_{a2z}}{4} + \frac{A_{b1z}}{4} - \frac{A_{b2z}}{4}\right) & 0 & 0 & \frac{\hbar^2\left(A_{b2x} + A_{b2y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{b1x} - A_{b1y}\right)}{4} & \frac{\hbar^2\left(A_{a2x} + A_{a2y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{a1x} - A_{a1y}\right)}{4} & 0 & 0 & 0 & 0\\0 & 0 & \hbar^2\left(- \frac{A_{a1z}}{4} + \frac{A_{a2z}}{4} - \frac{A_{b1z}}{4} + \frac{A_{b2z}}{4}\right) & 0 & \frac{\hbar^2\left(A_{b1x} + A_{b1y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{b2x} - A_{b2y}\right)}{4} & \frac{\hbar^2\left(A_{a1x} + A_{a1y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{a2x} - A_{a2y}\right)}{4} & 0 & 0 & 0 & 0\\0 & 0 & 0 & \hbar^2\left(- \frac{A_{a1z}}{4} - \frac{A_{a2z}}{4} - \frac{A_{b1z}}{4} - \frac{A_{b2z}}{4}\right) & 0 & \frac{\hbar^2\left(A_{b1x} + A_{b1y}\right)}{4} & \frac{\hbar^2\left(A_{b2x} + A_{b2y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{a1x} + A_{a1y}\right)}{4} & \frac{\hbar^2\left(A_{a2x} + A_{a2y}\right)}{4} & 0 & 0 & 0 & 0 & 0\\0 & \frac{\hbar^2\left(A_{b2x} + A_{b2y}\right)}{4} & \frac{\hbar^2\left(A_{b1x} + A_{b1y}\right)}{4} & 0 & \hbar^2\left(\frac{A_{a1z}}{4} + \frac{A_{a2z}}{4} - \frac{A_{b1z}}{4} - \frac{A_{b2z}}{4}\right) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a2x} - A_{a2y}\right)}{4} & \frac{\hbar^2\left(A_{a1x} - A_{a1y}\right)}{4} & 0\\\frac{\hbar^2\left(A_{b2x} - A_{b2y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{b1x} + A_{b1y}\right)}{4} & 0 & \hbar^2\left(\frac{A_{a1z}}{4} - \frac{A_{a2z}}{4} - \frac{A_{b1z}}{4} + \frac{A_{b2z}}{4}\right) & 0 & 0 & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a2x} + A_{a2y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{a1x} - A_{a1y}\right)}{4}\\\frac{\hbar^2\left(A_{b1x} - A_{b1y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{b2x} + A_{b2y}\right)}{4} & 0 & 0 & \hbar^2\left(- \frac{A_{a1z}}{4} + \frac{A_{a2z}}{4} + \frac{A_{b1z}}{4} - \frac{A_{b2z}}{4}\right) & 0 & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a1x} + A_{a1y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{a2x} - A_{a2y}\right)}{4}\\0 & \frac{\hbar^2\left(A_{b1x} - A_{b1y}\right)}{4} & \frac{\hbar^2\left(A_{b2x} - A_{b2y}\right)}{4} & 0 & 0 & 0 & 0 & \hbar^2\left(- \frac{A_{a1z}}{4} - \frac{A_{a2z}}{4} + \frac{A_{b1z}}{4} + \frac{A_{b2z}}{4}\right) & 0 & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a1x} + A_{a1y}\right)}{4} & \frac{\hbar^2\left(A_{a2x} + A_{a2y}\right)}{4} & 0\\0 & \frac{\hbar^2\left(A_{a2x} + A_{a2y}\right)}{4} & \frac{\hbar^2\left(A_{a1x} + A_{a1y}\right)}{4} & 0 & 0 & 0 & 0 & 0 & \hbar^2\left(- \frac{A_{a1z}}{4} - \frac{A_{a2z}}{4} + \frac{A_{b1z}}{4} + \frac{A_{b2z}}{4}\right) & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{b2x} - A_{b2y}\right)}{4} & \frac{\hbar^2\left(A_{b1x} - A_{b1y}\right)}{4} & 0\\\frac{\hbar^2\left(A_{a2x} - A_{a2y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{a1x} + A_{a1y}\right)}{4} & 0 & 0 & 0 & 0 & 0 & \hbar^2\left(- \frac{A_{a1z}}{4} + \frac{A_{a2z}}{4} + \frac{A_{b1z}}{4} - \frac{A_{b2z}}{4}\right) & 0 & 0 & \frac{\hbar^2\left(A_{b2x} + A_{b2y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{b1x} - A_{b1y}\right)}{4}\\\frac{\hbar^2\left(A_{a1x} - A_{a1y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{a2x} + A_{a2y}\right)}{4} & 0 & 0 & 0 & 0 & 0 & 0 & \hbar^2\left(\frac{A_{a1z}}{4} - \frac{A_{a2z}}{4} - \frac{A_{b1z}}{4} + \frac{A_{b2z}}{4}\right) & 0 & \frac{\hbar^2\left(A_{b1x} + A_{b1y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{b2x} - A_{b2y}\right)}{4}\\0 & \frac{\hbar^2\left(A_{a1x} - A_{a1y}\right)}{4} & \frac{\hbar^2\left(A_{a2x} - A_{a2y}\right)}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \hbar^2\left(\frac{A_{a1z}}{4} + \frac{A_{a2z}}{4} - \frac{A_{b1z}}{4} - \frac{A_{b2z}}{4}\right) & 0 & \frac{\hbar^2\left(A_{b1x} + A_{b1y}\right)}{4} & \frac{\hbar^2\left(A_{b2x} + A_{b2y}\right)}{4} & 0\\0 & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a2x} + A_{a2y}\right)}{4} & \frac{\hbar^2\left(A_{a1x} + A_{a1y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{b2x} + A_{b2y}\right)}{4} & \frac{\hbar^2\left(A_{b1x} + A_{b1y}\right)}{4} & 0 & \hbar^2\left(- \frac{A_{a1z}}{4} - \frac{A_{a2z}}{4} - \frac{A_{b1z}}{4} - \frac{A_{b2z}}{4}\right) & 0 & 0 & 0\\0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a2x} - A_{a2y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{a1x} + A_{a1y}\right)}{4} & \frac{\hbar^2\left(A_{b2x} - A_{b2y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{b1x} + A_{b1y}\right)}{4} & 0 & \hbar^2\left(- \frac{A_{a1z}}{4} + \frac{A_{a2z}}{4} - \frac{A_{b1z}}{4} + \frac{A_{b2z}}{4}\right) & 0 & 0\\0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a1x} - A_{a1y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{a2x} + A_{a2y}\right)}{4} & \frac{\hbar^2\left(A_{b1x} - A_{b1y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{b2x} + A_{b2y}\right)}{4} & 0 & 0 & \hbar^2\left(\frac{A_{a1z}}{4} - \frac{A_{a2z}}{4} + \frac{A_{b1z}}{4} - \frac{A_{b2z}}{4}\right) & 0\\0 & 0 & 0 & 0 & 0 & \frac{\hbar^2\left(A_{a1x} - A_{a1y}\right)}{4} & \frac{\hbar^2\left(A_{a2x} - A_{a2y}\right)}{4} & 0 & 0 & \frac{\hbar^2\left(A_{b1x} - A_{b1y}\right)}{4} & \frac{\hbar^2\left(A_{b2x} - A_{b2y}\right)}{4} & 0 & 0 & 0 & 0 & \hbar^2\left(\frac{A_{a1z}}{4} + \frac{A_{a2z}}{4} + \frac{A_{b1z}}{4} + \frac{A_{b2z}}{4}\right)\end{array}\right]
+$}
+\]
+
+\begin{align*}
+  &\bigl|+\tfrac{1}{2}, +\tfrac{1}{2}, +\tfrac{1}{2}, +\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|+\tfrac{1}{2}, +\tfrac{1}{2}, +\tfrac{1}{2}, -\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|+\tfrac{1}{2}, +\tfrac{1}{2}, -\tfrac{1}{2}, +\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|+\tfrac{1}{2}, +\tfrac{1}{2}, -\tfrac{1}{2}, -\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|+\tfrac{1}{2}, -\tfrac{1}{2}, +\tfrac{1}{2}, +\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|+\tfrac{1}{2}, -\tfrac{1}{2}, +\tfrac{1}{2}, -\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|+\tfrac{1}{2}, -\tfrac{1}{2}, -\tfrac{1}{2}, +\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|+\tfrac{1}{2}, -\tfrac{1}{2}, -\tfrac{1}{2}, -\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|-\tfrac{1}{2}, +\tfrac{1}{2}, +\tfrac{1}{2}, +\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|-\tfrac{1}{2}, +\tfrac{1}{2}, +\tfrac{1}{2}, -\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|-\tfrac{1}{2}, +\tfrac{1}{2}, -\tfrac{1}{2}, +\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|-\tfrac{1}{2}, +\tfrac{1}{2}, -\tfrac{1}{2}, -\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|-\tfrac{1}{2}, -\tfrac{1}{2}, +\tfrac{1}{2}, +\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|-\tfrac{1}{2}, -\tfrac{1}{2}, +\tfrac{1}{2}, -\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|-\tfrac{1}{2}, -\tfrac{1}{2}, -\tfrac{1}{2}, +\tfrac{1}{2}\bigr\rangle\\
+  &\bigl|-\tfrac{1}{2}, -\tfrac{1}{2}, -\tfrac{1}{2}, -\tfrac{1}{2}\bigr\rangle
+\end{align*}
+
+
+\end{document}

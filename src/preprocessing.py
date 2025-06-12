@@ -143,15 +143,15 @@ class Process():
             smooth_spectra.columns[2]
         )
 
-        ax.plot(smooth_spectra[x_col], smooth_spectra[y_smooth_col], c='r', label="smooth") 
+        #ax.plot(smooth_spectra[x_col], smooth_spectra[y_smooth_col], c='r', label="smooth") 
 
         if show_raw: 
             ax.scatter(raw_spectra[x_col], raw_spectra[y_raw_col],
                         c='k', marker='+', s=20, label="raw")
 
-        ax.set_xlabel(x_col, fontsize=14) 
-        ax.set_ylabel(y_raw_col, fontsize=14)
-        ax.set_title(self.filename, fontsize=14)
+        ax.set_xlabel(x_col, fontsize=20) 
+        ax.set_ylabel(y_raw_col, fontsize=20)
+        ax.set_title("EDMR Response at 2 Gauss, 200MHz Frequency, and a 4V Bias", fontsize=20)
         ax.legend() 
         ax.grid(True) 
 
@@ -168,12 +168,12 @@ class Process():
 
 
 if __name__ == "__main__": 
-    filename = "[NZFMR]_DER_1.5G_2.5V" 
+    filename = "[EDMR]_2G_4V_200MHz" 
     process  = Process(filename)
     process.apply_best_smoothing( 
         window_percents=(0.2, 0.1, 0.05, 0.01), 
         polyorders=(2, 3, 4, 5), 
-        max_peak_loss=0.01, 
+        max_peak_loss=0.001, 
         k=30
     ) 
 
