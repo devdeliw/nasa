@@ -7,5 +7,5 @@ def load(fname):
     sp.pretty_print(H)
 
 
-load("/Users/devaldeliwala/nasa/hamiltonian/spin_hamiltonian.pickle")
+load("/Users/devaldeliwala/nasa/hamiltonian/pickle/spin_hamiltonian.pickle")
     
