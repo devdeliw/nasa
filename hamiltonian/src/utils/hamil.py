@@ -37,7 +37,7 @@ class Hamiltonian():
     # All constants in Hamiltonian 
     _COMPONENT_SYMBOLS = {
         "zeeman"  : ["B0", "g_e", "mu_B", "g_n1", "g_n2", "mu_N"],
-        "hyperfine": ["hbar", "Aa1", "Aa2", "Ab1", "Ab2"],   
+        "hyperfine": ["Aa1", "Aa2", "Ab1", "Ab2"],   
         "zfs"     : ["D1", "D2"],
         "exchange": ["J"],
     }
@@ -47,7 +47,8 @@ class Hamiltonian():
         hyperfine=True, 
         zfs=True, 
         exchange=True,
-        template_folder=Path("/Users/devaldeliwala/nasa/hamiltonian/pickle")):
+        template_folder=Path.home() / "nasa" / "hamiltonian" / "pickle"
+    ):
 
         self.zeeman     = zeeman  
         self.hyperfine  = hyperfine 
@@ -107,9 +108,6 @@ class Hamiltonian():
             # Hyperfine 
             sp.Symbol("Aa1"):Aa1, sp.Symbol("Aa2"):Aa2,
             sp.Symbol("Ab1"):Ab1, sp.Symbol("Ab2"):Ab2,
-
-            # Reduced Plancks Constant 
-            sp.Symbol("hbar2"):hbar**2,
         }
 
         H_num = H_sym.subs(subs).evalf() 
@@ -183,9 +181,8 @@ for r in range(1,5):
         setattr(Hamiltonian, *_make_combo(combo))
 
 if __name__ == "__main__":
-    H = Hamiltonian().zeeman_only(
-        B0=0.35, g_e=2.002319, mu_B=5.788e-5,
-        g_n1=5.5857, g_n2=5.5857, mu_N=3.152e-8,
+    H = Hamiltonian().hyperfine_only(
+        Aa1=1.46e-7, Ab1=1.46e-7, Aa2=2.81e-7, Ab2=2.81e-7,
     )
     print(H)
 

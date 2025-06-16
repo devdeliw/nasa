@@ -6,7 +6,7 @@ import yaml
 import numpy as np
 from scipy import linalg
 from pathlib import Path 
-from hamil import Hamiltonian 
+from .hamil import Hamiltonian 
 
 import logging 
 logging.basicConfig(level=logging.INFO)
@@ -21,22 +21,22 @@ class Eigensolver(Hamiltonian):
     """
 
     _BASIS_MAP = {
-        0: "|1,  1> ⊗ |↑, ↑>",
-        1: "|1,  0> ⊗ |↑, ↑>",
-        2: "|0,  0> ⊗ |↑, ↑>",
-        3: "|1, -1> ⊗ |↑, ↑>",
-        4: "|1,  1> ⊗ |↑, ↓>",
-        5: "|1,  0> ⊗ |↑, ↓>",
-        6: "|0,  0> ⊗ |↑, ↓>",
-        7: "|1, -1> ⊗ |↑, ↓>",
-        8: "|1,  1> ⊗ |↓, ↑>",
-        9: "|1,  0> ⊗ |↓, ↑>",
-        10: "|0,  0> ⊗ |↓, ↑>",
-        11: "|1, -1> ⊗ |↓, ↑>",
-        12: "|1,  1> ⊗ |↓, ↓>",
-        13: "|1,  0> ⊗ |↓, ↓>",
-        14: "|0,  0> ⊗ |↓, ↓>",
-        15: "|1, -1> ⊗ |↓, ↓>",
+        0: "|1, 1>|↑, ↑>",
+        1: "|1, 0>|↑, ↑>",
+        2: "|0, 0>|↑, ↑>",
+        3: "|1,-1>|↑, ↑>",
+        4: "|1, 1>|↑, ↓>",
+        5: "|1, 0>|↑, ↓>",
+        6: "|0, 0>|↑, ↓>",
+        7: "|1,-1>|↑, ↓>",
+        8: "|1, 1>|↓, ↑>",
+        9: "|1, 0>|↓, ↑>",
+        10: "|0, 0>|↓, ↑>",
+        11: "|1,-1>|↓, ↑>",
+        12: "|1, 1>|↓, ↓>",
+        13: "|1, 0>|↓, ↓>",
+        14: "|0, 0>|↓, ↓>",
+        15: "|1,-1>|↓, ↓>",
     }
 
     _PARAM_SECTIONS = {
@@ -66,10 +66,15 @@ class Eigensolver(Hamiltonian):
         ],
     }
     
-    def __init__(self, method_name: str):
+    def __init__(self, method_name: str, verbose: bool = False):
         super().__init__()
         self.method_name = method_name 
-        self.yaml_path = Path("./params.yaml")
+        self.verbose = verbose 
+
+        home = Path.home() 
+        folder = home / "nasa" / "hamiltonian" 
+        params = folder / "src" / "utils" / "params.yaml"
+        self.yaml_path = Path(params)
         self.logger = logging.getLogger(__name__)
 
     def load_params(self) -> dict: 
@@ -119,9 +124,9 @@ class Eigensolver(Hamiltonian):
         if not np.allclose(H, H.conj().T, atol=1e-10): 
             self.logger.warning("Hamiltonian is not Hermitian; results may be invalid.") 
 
-        self.logger.info(" Starting spectral decomposition \n")
-        self.w, self.v = linalg.eigh(H, driver="evd") 
-        self.logger.info(" Eigenvalues: %s", self.w) 
+        if self.verbose: self.logger.info(" Starting spectral decomposition \n")
+        self.w, self.v = linalg.eig(H) 
+        if self.verbose: self.logger.info(" Eigenvalues: %s", self.w) 
 
     def _log_eigenvectors(self, abs_tol: float = 1e-6) -> None:
         """ 
@@ -145,7 +150,7 @@ class Eigensolver(Hamiltonian):
                 if abs(coeff) > thresh:
                     comps.append(f"{coeff:8.4f}{self._BASIS_MAP[j]}")
             combo = " + ".join(comps) if comps else "0"
-            self.logger.info(
+            if self.verbose: self.logger.info(
                 f"\nEigenvector {idx:2d} (λ = {lam:8.3e}):\n  {combo}\n"
             )
 
@@ -164,7 +169,8 @@ class Eigensolver(Hamiltonian):
 
 if __name__ == "__main__": 
     solver = Eigensolver( 
-        "zeeman_hyperfine", 
+        "zeeman_hyperfine_zfs_exchange",
+        verbose=True,  
     ) 
 
     solver.solve()
