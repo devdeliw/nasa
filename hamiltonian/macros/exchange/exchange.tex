@@ -1,0 +1,42 @@
+\documentclass[a4paper,landscape]{article}
+\usepackage{graphicx}
+
+% -- math
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{esint}
+
+% -- noindent
+\setlength\parindent{0pt}
+\usepackage[a4paper,margin=0.2in,landscape]{geometry}
+
+\begin{document}
+
+\small
+\[\scalebox{1.5}{%
+    $
+    H_{\mathrm{ex}} = \left[\begin{array}{cccccccccccccccc}- \frac{J}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & - \frac{J}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & \frac{3 J}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & - \frac{J}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & - \frac{J}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & - \frac{J}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & \frac{3 J}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{J}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{J}{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{J}{4} & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{3 J}{4} & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{J}{4} & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{J}{4} & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{J}{4} & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{3 J}{4} & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{J}{4}\end{array}\right]
+    $
+}\]
+
+\begin{align*}
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle
+\end{align*}
+
+
+\end{document}

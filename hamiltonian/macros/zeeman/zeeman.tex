@@ -1,0 +1,41 @@
+\documentclass[a4paper,landscape]{article}
+\usepackage{graphicx}
+
+% -- math
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{esint}
+
+% -- noindent
+\setlength\parindent{0pt}
+\usepackage[a4paper,margin=0.2in,landscape]{geometry}
+
+\begin{document}
+\small
+\[\scalebox{0.43}{%
+    $
+    H_Z = \left[\begin{array}{cccccccccccccccc}B_{0} g_{e} \mu_{B} + \frac{B_{0} g_{n1} \mu_{N}}{2} + \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & \frac{B_{0} g_{n1} \mu_{N}}{2} + \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & \frac{B_{0} g_{n1} \mu_{N}}{2} + \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & - B_{0} g_{e} \mu_{B} + \frac{B_{0} g_{n1} \mu_{N}}{2} + \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & B_{0} g_{e} \mu_{B} + \frac{B_{0} g_{n1} \mu_{N}}{2} - \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & \frac{B_{0} g_{n1} \mu_{N}}{2} - \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & \frac{B_{0} g_{n1} \mu_{N}}{2} - \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & - B_{0} g_{e} \mu_{B} + \frac{B_{0} g_{n1} \mu_{N}}{2} - \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & B_{0} g_{e} \mu_{B} - \frac{B_{0} g_{n1} \mu_{N}}{2} + \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{B_{0} g_{n1} \mu_{N}}{2} + \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{B_{0} g_{n1} \mu_{N}}{2} + \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - B_{0} g_{e} \mu_{B} - \frac{B_{0} g_{n1} \mu_{N}}{2} + \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & B_{0} g_{e} \mu_{B} - \frac{B_{0} g_{n1} \mu_{N}}{2} - \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{B_{0} g_{n1} \mu_{N}}{2} - \frac{B_{0} g_{n2} \mu_{N}}{2} & 0 & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - \frac{B_{0} g_{n1} \mu_{N}}{2} - \frac{B_{0} g_{n2} \mu_{N}}{2} & 0\\0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & - B_{0} g_{e} \mu_{B} - \frac{B_{0} g_{n1} \mu_{N}}{2} - \frac{B_{0} g_{n2} \mu_{N}}{2}\end{array}\right]
+    $
+}\]
+\vspace{20px}
+\begin{align*}
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|+\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|+\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|-\tfrac12,+\tfrac12\bigr\rangle\\
+ \bigl|1,1\bigr\rangle        &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,0\bigr\rangle        &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|0,0\bigr\rangle        &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle\\
+ \bigl|1,-1\bigr\rangle       &\otimes \bigl|-\tfrac12,-\tfrac12\bigr\rangle
+\end{align*}
+
+
+\end{document}

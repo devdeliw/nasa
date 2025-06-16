@@ -1,0 +1,25 @@
+# Parameter File for building Hamiltonia 
+zeeman: 
+  g_e   : 2.002319          # Free Electron     [dimensionless]
+  g_n1  : -1.110104         # 29Si              [dimensionless]
+  g_n2  : 1.404738          # 13C               [dimensionless]
+  
+  mu_B  : 5.7883818e-9      # Bohr Magneton     [eV/G] 
+  mu_N  : 3.1524513e-12     # Nuclear Magneton  [ev/G]
+
+  B0    : 35                # Magnetic Field    [G]
+
+hyperfine:
+  hbar: 6.582119569e-16    # Planck's Constant  [eV * s] 
+  A1_iso: 1.46e-7          # 29Si               [eV]
+  A2_iso: 2.81e-7          # 13C                [eV]
+
+zfs: 
+  D1: 3.40e-9              # Axial Dipolar      [eV] 
+  D2: 0                    # Rhombic Dipolar    [eV] 
+
+exchange:
+  J: 10e-3                 # Exchange Coupling  [eV] 
+  
+
+  
