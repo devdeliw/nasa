@@ -27,8 +27,8 @@ omega_n2  = g_n2 * mu_N * B0
 
 # build the diagonal entries
 entries = []
-for mI1, mI2 in nuclear_pairs:
-    for s, m in electron_states:
+for s, m in electron_states: 
+    for mI1, mI2 in nuclear_pairs:
         entries.append(
             m*omega_e     +      # electron zeeman
             mI1*omega_n1  +      # nucleus 1 zeeman
