@@ -12,7 +12,7 @@ electron_states = [(1, 1), (1, 0), (0, 0), (1, -1)]
 # build 4x4 electron exchange Hamiltonian 
 H_ex_elec = sp.zeros(4)
 for i, (s, m) in enumerate(electron_states):
-    H_ex_elec[i, i] = -J * (s * (s + 1) - sp.Rational(3, 2)) / 2
+    H_ex_elec[i, i] = -J * (s * (s + 1) - 1.5) / 2
 
 # 4x4 nuclear identity 
 I_nuc = sp.eye(4)

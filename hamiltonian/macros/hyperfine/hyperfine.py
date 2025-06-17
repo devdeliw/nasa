@@ -5,11 +5,12 @@ class HyperfineHamiltonian:
     """
     Builds a 2 electron x 2 s=1/2 nuclei Hyperfine Hamiltonian in the Zeeman 
     and coupled triplet-singlet basis via a Clebsch-Gordan transformation.
+
     """
 
     def __init__(self):
         # Define symbols for isotropic hyperfine constants
-        # Eigenvalues of spin-1/2 operators S_z, I_z are ±1/2 so no explicit ħ needed
+        # Eigenvalues of spin-1/2 operators S_z, I_z are ±1/2, hbar=1 natural units.
         self.A = {}  # Will contain A tensor labels
         for e in ('a', 'b'):
             for n in ('1', '2'):
@@ -26,12 +27,11 @@ class HyperfineHamiltonian:
         self.W = self._build_cg_unitary()                           # 16x16
 
         # Coupled Basis Hyperfine Hamiltonian
-        self.H_coup = sp.simplify(self.W * self.H_ze * self.W.T)    # 16x16
+        self.H_coup = sp.simplify(self.W * self.H_ze * self.W.T)    # type: ignore # 16x16
 
     def _generate_zeeman_basis(self):
-        """
-        Builds the Zeeman |m_a, m_b, m_I1, m_I2> basis with m = ±1/2.
-        """
+        # Builds the Zeeman |m_a, m_b, m_I1, m_I2> basis with m = ±1/2.
+
         half = sp.Rational(1, 2)
         return [
             (m_a, m_b, m_I1, m_I2)
@@ -48,9 +48,8 @@ class HyperfineHamiltonian:
         return m_e == -m_I
 
     def _action_on_ket(self, ket):
-        """
-        Calculates H_HF |ket> in Zeeman basis, returns dict {new_ket: coeff}.
-        """
+        # Calculates H_HF |ket> in Zeeman basis, returns dict {new_ket: coeff}.
+        
         m_a, m_b, m_I1, m_I2 = ket
         psi = {}
 
@@ -80,9 +79,8 @@ class HyperfineHamiltonian:
         return psi
 
     def _build_zeeman_matrix(self):
-        """
-        Return the full 16x16 hyperfine template in the Zeeman basis.
-        """
+        # Return the full 16x16 hyperfine template in the Zeeman basis.
+        
         size = len(self.basis_ze)
         H = sp.MutableDenseMatrix(size, size, lambda *_: 0)
         for j, ket in enumerate(self.basis_ze):
@@ -93,9 +91,8 @@ class HyperfineHamiltonian:
         return H.as_immutable()
 
     def _build_cg_unitary(self):
-        """
-        Builds the unitary for two-electron Clebsch-Gordan transform ⊗ identity on nuclei.
-        """
+        # Builds the unitary for two-electron Clebsch-Gordan transform otimes identity on nuclei.
+
         half = sp.sqrt(sp.Rational(1, 2))
         U = sp.Matrix([
             [1,    0,     0,    0],
@@ -107,7 +104,8 @@ class HyperfineHamiltonian:
         return sp.kronecker_product(U, I4)
 
     def coupled_matrix(self):
-        """Return the 16×16 hyperfine matrix in coupled basis."""
+        # Return the 16x16 hyperfine matrix in coupled basis.
+
         return self.H_coup
 
 # Helper to convert full anisotropic to isotropic form
@@ -118,9 +116,8 @@ A_b1x, A_b1y, A_b1z, A_b2x, A_b2y, A_b2z = sp.symbols(
 Aa1, Aa2, Ab1, Ab2 = sp.symbols('Aa1 Aa2 Ab1 Ab2')
 
 def convert_to_isotropic(H_sym: sp.Matrix) -> sp.Matrix:
-    """
-    Substitute anisotropic A_xyz → isotropic Aa, Ab values.
-    """
+    # Substitute anisotropic A_xyz -> isotropic Aa, Ab values.
+
     subs_map = {
         A_a1x: Aa1, A_a1y: Aa1, A_a1z: Aa1,
         A_a2x: Aa2, A_a2y: Aa2, A_a2z: Aa2,
@@ -156,7 +153,8 @@ if __name__ == '__main__':
     folder = Path.home() / "nasa" / "hamiltonian" / "pickle"
     folder.mkdir(parents=True, exist_ok=True)
     fname = folder / "hyperfine.pickle"
+    
     with open(fname, "wb") as f:
         pickle.dump(H_iso, f)
-    print(f"Hyperfine Hamiltonian saved to {fname}.")
+        print(f"Hyperfine Hamiltonian saved to {fname}.")
     

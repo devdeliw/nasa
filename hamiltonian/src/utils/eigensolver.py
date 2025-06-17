@@ -6,7 +6,10 @@ import yaml
 import numpy as np
 from scipy import linalg
 from pathlib import Path 
-from .hamil import Hamiltonian 
+if __name__ != "__main__": # run from ~/NASA/ 
+    from .hamil import Hamiltonian 
+else: 
+    from hamil import Hamiltonian 
 
 import logging 
 logging.basicConfig(level=logging.INFO)
@@ -40,30 +43,21 @@ class Eigensolver(Hamiltonian):
     }
 
     _PARAM_SECTIONS = {
-        "zeeman_only": ["zeeman"],
-        "hyperfine_only": ["hyperfine"],
-        "zfs_only": ["zfs"],
-        "exchange_only": ["exchange"],
-        "zeeman_hyperfine": ["zeeman", "hyperfine"],
-        "zeeman_zfs": ["zeeman", "zfs"],
-        "zeeman_exchange": ["zeeman", "exchange"],
-        "hyperfine_zfs": ["hyperfine", "zfs"],
-        "hyperfine_exchange": ["hyperfine", "exchange"],
-        "zfs_exchange": ["zfs", "exchange"],
-        "zeeman_hyperfine_zfs": ["zeeman", "hyperfine", "zfs"],
-        "zeeman_hyperfine_exchange": [
-            "zeeman",
-            "hyperfine",
-            "exchange",
-        ],
-        "zeeman_zfs_exchange": ["zeeman", "zfs", "exchange"],
-        "hyperfine_zfs_exchange": ["hyperfine", "zfs", "exchange"],
-        "zeeman_hyperfine_zfs_exchange": [
-            "zeeman",
-            "hyperfine",
-            "zfs",
-            "exchange",
-        ],
+        "zeeman_only":                  ["zeeman"],
+        "hyperfine_only":               ["hyperfine"],
+        "zfs_only":                     ["zfs"],
+        "exchange_only":                ["exchange"],
+        "zeeman_hyperfine":             ["zeeman", "hyperfine"],
+        "zeeman_zfs":                   ["zeeman", "zfs"],
+        "zeeman_exchange":              ["zeeman", "exchange"],
+        "hyperfine_zfs":                ["hyperfine", "zfs"],
+        "hyperfine_exchange":           ["hyperfine", "exchange"],
+        "zfs_exchange":                 ["zfs", "exchange"],
+        "zeeman_hyperfine_zfs":         ["zeeman", "hyperfine", "zfs"],
+        "zeeman_hyperfine_exchange":    ["zeeman", "hyperfine", "exchange"],
+        "zeeman_zfs_exchange":          ["zeeman", "zfs", "exchange"],
+        "hyperfine_zfs_exchange":       ["hyperfine", "zfs", "exchange"],
+        "zeeman_hyperfine_zfs_exchange":["zeeman", "hyperfine", "zfs", "exchange"], # full spin hamiltonian
     }
     
     def __init__(self, method_name: str, verbose: bool = False):
@@ -125,7 +119,7 @@ class Eigensolver(Hamiltonian):
             self.logger.warning("Hamiltonian is not Hermitian; results may be invalid.") 
 
         if self.verbose: self.logger.info(" Starting spectral decomposition \n")
-        self.w, self.v = linalg.eig(H) 
+        self.w, self.v = linalg.eig(H)  # type: ignore
         if self.verbose: self.logger.info(" Eigenvalues: %s", self.w) 
 
     def _log_eigenvectors(self, abs_tol: float = 1e-6) -> None:
@@ -142,7 +136,7 @@ class Eigensolver(Hamiltonian):
 
         assert self.w is not None and self.v is not None, "Diagonalisation missing."
 
-        for idx, (lam, vec) in enumerate(zip(self.w, self.v.T)):
+        for idx, (lam, vec) in enumerate(zip(self.w, self.v.T)): # type: ignore
             comps = []
             vmax = np.max(np.abs(vec))
             thresh = abs_tol * vmax
@@ -168,12 +162,15 @@ class Eigensolver(Hamiltonian):
 
 
 if __name__ == "__main__": 
+    from hamil import Hamiltonian
+
     solver = Eigensolver( 
-        "zeeman_hyperfine_zfs_exchange",
+        "hyperfine_only",
         verbose=True,  
     ) 
 
     solver.solve()
+
         
 
 
