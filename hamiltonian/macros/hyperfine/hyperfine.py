@@ -27,7 +27,7 @@ class HyperfineHamiltonian:
         self.W = self._build_cg_unitary()                           # 16x16
 
         # Coupled Basis Hyperfine Hamiltonian
-        self.H_coup = sp.simplify(self.W * self.H_ze * self.W.T)    # type: ignore # 16x16
+        self.H_coup = sp.simplify(self.W * self.H_ze * self.W.H)    # type: ignore # 16x16
 
     def _generate_zeeman_basis(self):
         # Builds the Zeeman |m_a, m_b, m_I1, m_I2> basis with m = ±1/2.

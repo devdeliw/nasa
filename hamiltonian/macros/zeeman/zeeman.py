@@ -6,11 +6,6 @@ from pathlib import Path
 
 g_e, mu_B, B0, g_n1, g_n2, mu_N = sp.symbols('g_e mu_B B0 g_n1 g_n2 mu_N')
 
-# zeeman frequencies
-omega_e   = g_e  * mu_B * B0
-omega_n1  = g_n1 * mu_N * B0
-omega_n2  = g_n2 * mu_N * B0
-
 # build basis in same ordering as hyperfine
 electron_states = [
     (1, +1),
@@ -24,6 +19,11 @@ nuclear_pairs = [
     ( sp.Rational(-1,2), sp.Rational(+1,2) ),
     ( sp.Rational(-1,2), sp.Rational(-1,2) ),
 ]
+
+# zeeman frequencies
+omega_e   = g_e  * mu_B * B0
+omega_n1  = g_n1 * mu_N * B0
+omega_n2  = g_n2 * mu_N * B0
 
 # build the diagonal entries
 entries = []
