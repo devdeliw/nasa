@@ -50,8 +50,12 @@ def main(
         energies[i] = solver.w.real          # grab the eigenvalues
 
     plt.figure(figsize=(6,4))
+
+
+    colors = plt.cm.jet(np.linspace(0, 1, 16))
+
     for k in range(16):
-        plt.plot(B_fields, energies[:, k], lw=1, label=f"{solver._BASIS_MAP.get(k, "")}")
+        plt.plot(B_fields, energies[:, k], lw=1, c=colors[k], label=f"{solver._BASIS_MAP.get(k, "")}")
     plt.xlabel("Magnetic Field $B_0$ (G)")
     plt.ylabel("Energy (arb. units)")
     plt.title("Zeeman-only Energy vs. B")
