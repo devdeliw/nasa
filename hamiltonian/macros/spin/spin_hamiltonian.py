@@ -2,14 +2,25 @@
 import pickle
 import sympy as sp 
 import textwrap 
+from pathlib import Path 
+
 
 def load_matrix(filename):
-    with open(filename, 'rb') as f:
+    home = Path.home() 
+    folder = home / "nasa" / "hamiltonian" 
+    fname = folder / "pickle" / filename 
+
+    with open(fname, 'rb') as f:
         return pickle.load(f)
 
 def save_matrix(matrix, filename):
-    with open(filename, 'wb') as f:
+    home = Path.home() 
+    folder = home / "nasa" / "hamiltonian"
+    fname = folder / "pickle" / filename 
+
+    with open(fname, 'wb') as f:
         pickle.dump(matrix, f)
+    print(f"Spin Hamiltonian saved to {fname}.")
 
 def combine_spin_hamiltonians(
         zeeman_file, 
@@ -32,7 +43,6 @@ def combine_spin_hamiltonians(
     H_SPIN = H_zeeman + H_hyperfine + H_zfs + H_exchange
 
     save_matrix(H_SPIN, output_file)
-    print(f"Spin Hamiltonian saved to {output_file}.")
     return H_SPIN 
 
 def write_latex(matrix, filename, matrix_name="H_total"):
@@ -70,6 +80,4 @@ if __name__ == "__main__":
         exchange_file="exchange.pickle",
         output_file="spin_hamiltonian.pickle"
     )
-
-    write_latex(H_SPIN, "spin_hamiltonian.tex", matrix_name="H_0")
 

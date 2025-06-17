@@ -2,12 +2,14 @@ import sympy as sp
 import textwrap
 import pickle 
 
+from pathlib import Path
+
 g_e, mu_B, B0, g_n1, g_n2, mu_N = sp.symbols('g_e mu_B B0 g_n1 g_n2 mu_N')
 
 # zeeman frequencies
-Ωe   = g_e  * mu_B * B0
-Ωn1  = g_n1 * mu_N * B0
-Ωn2  = g_n2 * mu_N * B0
+omega_e   = g_e  * mu_B * B0
+omega_n1  = g_n1 * mu_N * B0
+omega_n2  = g_n2 * mu_N * B0
 
 # build basis in same ordering as hyperfine
 electron_states = [
@@ -28,9 +30,9 @@ entries = []
 for mI1, mI2 in nuclear_pairs:
     for s, m in electron_states:
         entries.append(
-            m*Ωe     +      # electron zeeman
-            mI1*Ωn1  +      # nucleus 1 zeeman
-            mI2*Ωn2         # nucleus 2 zeeman
+            m*omega_e     +      # electron zeeman
+            mI1*omega_n1  +      # nucleus 1 zeeman
+            mI2*omega_n2         # nucleus 2 zeeman
         )
 H_Z = sp.diag(*entries) # Hamiltonian 
 
@@ -58,9 +60,13 @@ def write_matrix_tex(matrix, filename, matrix_name="H_Z"):
         f.write(doc)
     return f"./{filename}"
 
-fname = "/Users/devaldeliwala/nasa/Hamiltonian/zeeman.pickle"
+home = Path.home() 
+target = home / "nasa" / "hamiltonian"
+fname = target / "pickle"/ "zeeman.pickle"
+
 with open(fname, "wb") as f: 
     pickle.dump(H_Z, f)
     print(f"Zeeman Hamiltonian saved to {fname}.")
 
 
+ 

@@ -2,6 +2,8 @@ import sympy as sp
 import textwrap
 import pickle 
 
+from pathlib import Path
+
 J = sp.symbols('J')
 
 # same electron basis ordering
@@ -10,7 +12,7 @@ electron_states = [(1, 1), (1, 0), (0, 0), (1, -1)]
 # build 4x4 electron exchange Hamiltonian 
 H_ex_elec = sp.zeros(4)
 for i, (s, m) in enumerate(electron_states):
-    H_ex_elec[i, i] = -J * (s * (s + 1) - sp.Rational(3, 2)) / 2
+    H_ex_elec[i, i] = -J * (s * (s + 1) - 1.5) / 2
 
 # 4x4 nuclear identity 
 I_nuc = sp.eye(4)
@@ -45,8 +47,10 @@ def write_matrix_tex(matrix, filename, matrix_name="H_{ex}"):
         f.write(doc)
     return path
 
+home = Path.home() 
+folder = home / "nasa" / "hamiltonian" 
+fname = folder / "pickle" / "exchange.pickle"
 
-fname = "/Users/devaldeliwala/nasa/Hamiltonian/exchange.pickle" 
 with open(fname, "wb") as f: 
     pickle.dump(H_EX, f) 
     print(f"Exchange Hamiltonian written to {fname}.")
