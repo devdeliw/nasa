@@ -12,25 +12,39 @@ from pathlib import Path
 import logging 
 logging.basicConfig(level=logging.INFO)
 
-""" 
-Sweeps from -100G to 100G and plots Energy [eV] vs. B [G] for the 
-provided `method_name` Hamiltonian. 
-
-I use the Kuhn-Munkres algorithm to compute the optimal one-to-one matching 
-of eigenvectors between successive B-steps, consistent labeling. This is because 
-the singlet-triplet basis isn't the eigenbasis, so this is the next best-thing 
-labelling-wise. 
-
-"""
 
 yaml_path = Path.home() / "nasa/hamiltonian/src/utils" / "params.yaml" 
 
 def sweep(
         method_name: str, 
-        b_sweep: tuple = (-40, 40, 201),
-        verbose: bool = False, 
-        outdir = Path.home() / "nasa/hamiltonian/src/" / "media"
+        b_sweep: tuple  = (-40, 40, 201),
+        verbose: bool   = False, 
+        outdir: Path    = Path.home() / "nasa/hamiltonian/src/" / "media"
 ):
+    
+    """
+    Sweeps across B and plots Energy [eV] vs. B [G] for the 
+    provided `method_name` Hamiltonian (See Args). 
+
+    I use the Kuhn-Munkres algorithm to compute the optimal one-to-one matching 
+    of eigenvectors between successive B-steps, consistent labeling. This is because 
+    the singlet-triplet basis isn't the eigenbasis, so this is the next best-thing 
+    labelling-wise. 
+
+    Args: 
+        * method_name: str 
+            The Hamiltonian Combination to Calculate. You can see allowed method_name's in utils/hamil.py. 
+        * b_sweep: tuple 
+            The Magnetic Field B Sweep Range in Gauss. (-40, 40, 200) will sweep across -40G to 40G in 200 steps. 
+        * verbose: bool 
+            If you want more information to be printed as the algorithm runs. 
+        * outdir: Path 
+            Where to place the final generated image files.
+             
+    """
+    
+
+
     solver = Eigensolver(method_name=method_name, verbose=verbose) 
     params = solver.load_params()
 
