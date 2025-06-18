@@ -11,7 +11,7 @@ if __name__ != "__main__": # run from ~/NASA/
 else: 
     from hamil import Hamiltonian 
 
-import logging 
+import logging
 logging.basicConfig(level=logging.INFO)
 
 class Eigensolver(Hamiltonian): 
@@ -130,8 +130,8 @@ class Eigensolver(Hamiltonian):
 
         Args: 
             * abs_tol: float  
-            States w/ coefficients below this value are not considered 
-            for eigenvector decomposition in the original basis. 
+              States w/ coefficients below this value are not considered. 
+              for eigenvector decomposition in the original basis. 
         """
 
         assert self.w is not None and self.v is not None, "Diagonalisation missing."
