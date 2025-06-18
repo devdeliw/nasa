@@ -12,7 +12,7 @@ from pathlib import Path
 import logging 
 logging.basicConfig(level=logging.INFO)
 
-
+# parameter file location
 yaml_path = Path.home() / "nasa/hamiltonian/src/utils" / "params.yaml" 
 
 def sweep(
@@ -40,7 +40,7 @@ def sweep(
             If you want more information to be printed as the algorithm runs. 
         * outdir: Path 
             Where to place the final generated image files.
-             
+
     """
     
 
