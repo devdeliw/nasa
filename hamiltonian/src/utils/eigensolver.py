@@ -137,13 +137,22 @@ class Eigensolver(Hamiltonian):
 
         assert self.w is not None and self.v is not None, "Diagonalisation missing."
 
+        self.labels = []   # For each eigenvector, will store the dominant coupled-basis state.
         for idx, (lam, vec) in enumerate(zip(self.w, self.v.T)): # type: ignore
             comps = []
             vmax = np.max(np.abs(vec))
             thresh = abs_tol * vmax
+
+            max_coeff = 0
+            max_state = ""
             for j, coeff in enumerate(vec):
                 if abs(coeff) > thresh:
                     comps.append(f"{coeff:8.4f}{self._BASIS_MAP[j]}")
+                if abs(coeff) > max_coeff: 
+                    max_coeff = abs(coeff)
+                    max_state = self._BASIS_MAP[j]
+            self.labels.append(max_state)
+
             combo = " + ".join(comps) if comps else "0"
             if self.verbose: self.logger.info(
                 f"\nEigenvector {idx:2d} (λ = {lam:8.3e}):\n  {combo}\n"

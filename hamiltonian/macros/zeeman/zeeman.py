@@ -1,6 +1,7 @@
 import sympy as sp
 import textwrap
 import pickle 
+import numpy as np 
 
 from pathlib import Path
 
@@ -35,6 +36,17 @@ for s, m in electron_states:
             mI2*omega_n2         # nucleus 2 zeeman
         )
 H_Z = sp.diag(*entries) # Hamiltonian 
+
+# Verify Numerical Hermicity 
+H_np = np.array(
+    H_Z.subs({B0:0.01, g_e:2.002319, g_n1:-1.110104, g_n2:1.404738,
+                 mu_B:5.7883818e-9, mu_N:3.1524513e-12})
+    .evalf()
+    .tolist(),
+    dtype=complex
+)
+assert np.allclose(H_np, H_np.conj().T, atol=1e-12), "Zeeman Hamiltonian is not Hermitian!"
+
 
 def write_matrix_tex(matrix, filename, matrix_name="H_Z"):
     latex_matrix = sp.latex(matrix)

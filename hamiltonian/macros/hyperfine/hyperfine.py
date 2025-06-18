@@ -116,6 +116,7 @@ A_b1x, A_b1y, A_b1z, A_b2x, A_b2y, A_b2z = sp.symbols(
 Aa1, Aa2, Ab1, Ab2 = sp.symbols('Aa1 Aa2 Ab1 Ab2')
 
 def convert_to_isotropic(H_sym: sp.Matrix) -> sp.Matrix:
+    import numpy as np 
     # Substitute anisotropic A_xyz -> isotropic Aa, Ab values.
 
     subs_map = {
@@ -124,10 +125,20 @@ def convert_to_isotropic(H_sym: sp.Matrix) -> sp.Matrix:
         A_b1x: Ab1, A_b1y: Ab1, A_b1z: Ab1,
         A_b2x: Ab2, A_b2y: Ab2, A_b2z: Ab2,
     }
-    return sp.simplify(H_sym.subs(subs_map))
+    H_iso = sp.simplify(H_sym.subs(subs_map))
+
+    # Verify Numerical Hermicity 
+    H_np = np.array(
+        H_iso.subs({
+            Aa1: 1.46e-7, Ab1: 1.46e-7,
+            Aa2: 2.81e-7, Ab2: 2.81e-7
+        }).evalf().tolist(),
+        dtype=complex
+    )
+    assert np.allclose(H_np, H_np.conj().T, atol=1e-12), "Hyperfine Hamiltonian is not Hermitian!"
+    return H_iso
 
 # Export to LaTeX
-
 def write_matrix_tex(matrix, filename, matrix_name="H"):
     latex_matrix = sp.latex(matrix)
     doc = textwrap.dedent(rf"""

@@ -1,6 +1,7 @@
 import sympy as sp
 import textwrap
 import pickle 
+import numpy as np 
 
 from pathlib import Path
 
@@ -19,6 +20,14 @@ I_nuc = sp.eye(4)
 
 # Exchange Hamiltonian 
 H_EX = sp.kronecker_product(I_nuc, H_ex_elec)
+
+# Verify Numerical Hermicity 
+H_np = np.array(
+    H_EX.subs({J: 10e-3}).evalf().tolist(),     # type: ignore
+    dtype=complex
+)
+assert np.allclose(H_np, H_np.conj().T, atol=1e-12), "Exchange Hamiltonian is not Hermitian!"
+
 
 def write_matrix_tex(matrix, filename, matrix_name="H_{ex}"):
     latex_mat = sp.latex(matrix)

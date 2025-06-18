@@ -1,6 +1,7 @@
 import sympy as sp
 import textwrap
 import pickle
+import numpy as np
 
 from pathlib import Path
 
@@ -14,19 +15,25 @@ H_elec = sp.zeros(4)
 for i, (s, m) in enumerate(electron_states):
     # Diagonal term: D1 * m^2 - (D1/3) * s(s+1)
     H_elec[i, i] = D1*m**2 - (D1/3)*s*(s+1)
-    # Off-diagonal terms coupling m -> m±2
+    # Off-diagonal terms coupling m -> m+/-2
     for dm, expr in [(2, D2/2*(s*(s+1) - m*(m+1))),
                      (-2, D2/2*(s*(s+1) - m*(m-1)))]:
         newm = m + dm
         if (s, newm) in electron_states:
             j = electron_states.index((s, newm))
             H_elec[i, j] = expr
+            H_elec[j, i] = expr
 
 # 4x4 identity nuclear ZFS Hamiltonian 
 I_nuc = sp.eye(4)
 
 # Final ZFS Hamiltonian 
-H_ZFS = sp.kronecker_product(I_nuc, H_elec)
+H_ZFS = sp.kronecker_product(H_elec, I_nuc)
+
+# Verify Numerical Hermicity 
+H_num = H_ZFS.subs({D1: 1.65e-7, D2: 2.07e-8}).evalf() # type: ignore 
+A = np.array(H_num.tolist(), dtype=complex)            # type: ignore 
+assert np.allclose(A, A.conj().T), "ZFS Hamiltonian Not Hermitian!"
 
 def write_matrix_tex(matrix, filename, matrix_name="H_{ZFS}"):
     latex_matrix = sp.latex(matrix)
