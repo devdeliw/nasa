@@ -43,8 +43,6 @@ def sweep(
 
     """
     
-
-
     solver = Eigensolver(method_name=method_name, verbose=verbose) 
     params = solver.load_params()
 
