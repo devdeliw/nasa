@@ -114,7 +114,7 @@ def sweep(
 
 if __name__ == "__main__":
     sweep( 
-       method_name = "hyperfine_zfs_exchange", 
+       method_name = "zeeman_hyperfine_zfs_exchange", 
        b_sweep=(-40, 40, 201), 
        verbose=False, 
        outdir = Path.home() / "nasa/hamiltonian/src/" / "media"
