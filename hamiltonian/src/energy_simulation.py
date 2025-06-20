@@ -26,20 +26,26 @@ def sweep(
     Sweeps across B and plots Energy [eV] vs. B [G] for the 
     provided `method_name` Hamiltonian (See Args). 
 
-    I use the Kuhn-Munkres algorithm to compute the optimal one-to-one matching 
-    of eigenvectors between successive B-steps, consistent labeling. This is because 
+    I use the Hungarian (Kuhn-Munkres) algorithm to compute the optimal one-to-one matching 
+    of eigenvectors between successive B-steps for consistent labeling. This is because 
     the singlet-triplet basis isn't the eigenbasis, so this is the next best-thing 
     labelling-wise. 
 
     Args: 
         * method_name: str 
-            The Hamiltonian Combination to Calculate. You can see allowed method_name's in utils/hamil.py. 
+            The Hamiltonian combination to calculate. You can see allowed method_name's in utils/hamil.py. 
+            method_name = "zeeman_hyperfine_zfs_exchange" is the full spin hamiltonian.
         * b_sweep: tuple 
-            The Magnetic Field B Sweep Range in Gauss. (-40, 40, 200) will sweep across -40G to 40G in 200 steps. 
-        * verbose: bool 
+            The Magnetic field B sweep range in Gauss. 
+            b_sweep = (-40, 40, 200) will sweep across -40G to 40G in 200 steps. 
+        * verbose: bool
             If you want more information to be printed as the algorithm runs. 
         * outdir: Path 
-            Where to place the final generated image files.
+            directory to place the final generated image files.
+            The filename will be {method_name}_sweep.png unless its the full spin hamiltonian. 
+            DPI is set to 300.
+
+    The final energy simulation plot is placed in {outdir}/{method_name}_sweep.png 
 
     """
     
@@ -52,30 +58,31 @@ def sweep(
     prev_v = None # hold eigenvectors from previous B 
     labels = None # hold eigenvector labels across B 
     for i, B in enumerate(tqdm.tqdm(B_fields)): 
-        update_B0(yaml_path, B)      # type: ignore
+        update_B0(yaml_path, B)                     # type: ignore
 
-        # Build & diagonalize via Eigensolver
-        solver._set_hamiltonian()            # populates solver.H
-        solver._spectral_decomposition()     # populates solver.w, solver.v
+        # build & diagonalize via Eigensolver
+        solver._set_hamiltonian()                   # builds hamiltonian
+        solver._spectral_decomposition()            # populates solver.w, solver.v
         
-        # Maintain eigenvector ordering from LAPACK algorithm.
+        # maintain eigenvector ordering from LAPACK eigensolver. 
         if prev_v is None:
             solver._log_eigenvectors()           # populates solver.combos
             energies[i] = solver.w.real          # type: ignore
             prev_v      = solver.v               # (16,16), columns are eigenvectors 
             labels      = solver.labels.copy() 
         else:
+            # Hungarian Algorithm
             C = np.abs(prev_v.conj().T @ solver.v)      # 16×16 overlap matrix
             order = np.argmax(C, axis=1)                # for each old column, find new one with max overlap 
             
-            # Re-order eigenvalues & eigenvectors
-            energies[i] = solver.w[order].real  # type: ignore 
-            prev_v      = solver.v[:, order]    # type: ignore
+            # re-order eigenvalues & eigenvectors
+            energies[i] = solver.w[order].real              # type: ignore 
+            prev_v      = solver.v[:, order]                # type: ignore
 
-            # Also Re-order labels 
+            # re-order labels 
             labels = [labels[old_idx] for old_idx in order] # type: ignore
 
-    # Generating Sweep plot
+    # generating sweep plot
     fig, axis = plt.subplots(1, 1, figsize=(6, 5))
     colors = plt.cm.jet(np.linspace(0, 1, 16)) # type: ignore 
 
@@ -87,7 +94,7 @@ def sweep(
     plt.legend(fontsize=6)
     plt.title(f"{method_name} Energy [eV] vs. B [G]")
 
-    # Showing the simulation parameters in the plot 
+    # Adding the simulation parameters in the plot 
     param_lines = [f"{k} = {float(v):.3g}" for k, v in params.items()]
     param_text  = "\n".join(param_lines)
     fig.subplots_adjust(right=0.75)
@@ -111,8 +118,7 @@ def sweep(
         method_name = "full_spin_hamiltonian"   
     fname = outdir / f"{method_name}_sweep.png"
     fig.savefig(fname , dpi=300)
-    logging.info(f"{method_name} simulation saved to {fname}.")
-    
+    logging.info(f" {method_name} simulation saved to {fname}.")
     
 
 if __name__ == "__main__":
