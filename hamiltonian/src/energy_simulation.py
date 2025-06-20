@@ -106,6 +106,9 @@ def sweep(
     
     plt.tight_layout()
     os.makedirs(outdir, exist_ok=True)
+
+    if method_name == "zeeman_hyperfine_zfs_exchange":
+        method_name = "full_spin_hamiltonian"   
     fname = outdir / f"{method_name}_sweep.png"
     fig.savefig(fname , dpi=300)
     logging.info(f"{method_name} simulation saved to {fname}.")
