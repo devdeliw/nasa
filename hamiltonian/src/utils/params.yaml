@@ -6,12 +6,12 @@ hyperfine:
   A2_iso: 4.14e-8           # [eV] # 2.81e-07
 
 zeeman:
-  B0    : -21.2             # [G]
-  g_e   : 2.002319          # dimensionless
-  g_n1  : -1.110104         # dimensionless # -1.110104
-  g_n2  : 1.404738          # dimensionless # 1.404738
-  mu_B  : 5.7883818e-09     # [eV/G]
-  mu_N  : 3.1524512e-12     # [eV/G] # 3.1524512e-12
+  B0: 40.0                  # [G]
+  g_e: 2.002319             # dimensionless
+  g_n1: -1.110104           # dimensionless # -1.110104
+  g_n2: 1.404738            # dimensionless # 1.404738
+  mu_B: 5.7883818e-09       # [eV/G]
+  mu_N: 3.1524512e-12       # [eV/G] # 3.1524512e-12
 
 zfs:
   D1: 1.65e-7               # [eV]

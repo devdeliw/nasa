@@ -1,15 +1,19 @@
+## Code written by Deval Deliwala 
+## NASA Glenn Research Center 
+##  Mentor @ Dr. Daniel R. Hart. 
+
 #!/usr/bin/env python3
-import os 
+import os
 import tqdm
-import yaml
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import linear_sum_assignment
 
 from utils.eigensolver import Eigensolver
 from utils.update_yaml import update_B0
 from pathlib import Path
 
-import logging 
+import logging
 logging.basicConfig(level=logging.INFO)
 
 # parameter file location
@@ -23,30 +27,14 @@ def sweep(
 ):
     """
     Sweeps across B and plots Energy [eV] vs. B [G] for the 
-    provided `method_name` Hamiltonian (See Args). 
+    provided `method_name` Hamiltonian (See Args).
 
-    I use the Hungarian (Kuhn-Munkres) algorithm to compute the optimal one-to-one matching 
-    of eigenvectors between successive B-steps for consistent labeling. This is because 
-    the singlet-triplet basis isn't the eigenbasis, so this is the next best-thing 
-    labelling-wise. 
-
-    Args: 
-        * method_name: str 
-            The Hamiltonian combination to calculate. You can see allowed method_name's in utils/hamil.py. 
-            method_name = "zeeman_hyperfine_zfs_exchange" is the full spin hamiltonian.
-        * b_sweep: tuple 
-            The Magnetic field B sweep range in Gauss. 
-            b_sweep = (-40, 40, 200) will sweep across -40G to 40G in 200 steps. 
-        * verbose: bool
-            If you want more information to be printed as the algorithm runs. 
-        * outdir: Path 
-            directory to place the final generated image files.
-            The filename will be {method_name}_sweep.png unless its the full spin hamiltonian. 
-            DPI is set to 300.
-
-    The final energy simulation plot is placed in {outdir}/{method_name}_sweep.png 
-
+    Maintains consistent eigenvector labeling via Hungarian matching, 
+    then assigns colors by ordering modes (states) by their average energy 
+    to get a smooth rainbow gradient (highest-energy = red, lowest = blue).
     """
+
+    logging.info(f" Starting Eigensimulation for {method_name!r}")
     
     solver = Eigensolver(
         method_name=method_name, 
@@ -56,79 +44,133 @@ def sweep(
     params = solver.load_params()
 
     B_fields = np.linspace(*b_sweep)
-    energies = np.zeros((len(B_fields), 16))
+    n_states = 16
+    energies = np.zeros((len(B_fields), n_states))
     
-    prev_v = None # hold eigenvectors from previous B 
-    labels = None # hold eigenvector labels across B 
-    for i, B in enumerate(tqdm.tqdm(B_fields)): 
-        update_B0(yaml_path, B)                     # type: ignore
+    prev_v = None  # eigenvectors from previous B
+    labels = None  # consistent labels across B
 
-        # build & diagonalize via Eigensolver
-        solver._set_hamiltonian()                   # builds hamiltonian
-        solver._spectral_decomposition()            # populates solver.w, solver.v
+    for i, B in enumerate(tqdm.tqdm(B_fields)):
+        update_B0(yaml_path, B)                     # update param file
+
+        solver._set_hamiltonian()
+        solver._spectral_decomposition()            # solver.w, solver.v populated
         
-        # maintain eigenvector ordering from LAPACK eigensolver. 
         if prev_v is None:
-            solver._log_eigenvectors()              # populates solver.combos
-            energies[i] = solver.w.real             # type: ignore
-            prev_v      = solver.v                  # (16,16), columns are eigenvectors 
-            labels      = solver.labels.copy() 
+            solver._log_eigenvectors()
+            energies[i] = solver.w.real
+            prev_v      = solver.v               # columns are eigenvectors
+            labels      = solver.labels.copy()
         else:
-            # Hungarian Algorithm
-            C = np.abs(prev_v.conj().T @ solver.v)  # 16×16 overlap matrix
-            order = np.argmax(C, axis=1)            # for each old column, find new one with max overlap 
-            
-            # re-order eigenvalues & eigenvectors
-            energies[i] = solver.w[order].real                                  # type: ignore 
-            prev_v      = solver.v[:, order]                                    # type: ignore
+            # hungarian matching
+            C = np.abs(prev_v.conj().T @ solver.v)
+            _, col_idx = linear_sum_assignment(-C)
 
-            # re-order labels 
-            labels = [labels[old_idx] for old_idx in order]                     # type: ignore 
+            # reorder energies, eigenvectors, labels
+            energies[i] = solver.w[col_idx].real
+            prev_v      = solver.v[:, col_idx]
+            labels      = [labels[j] for j in col_idx]
 
-    # generating sweep plot
-    fig, axis = plt.subplots(1, 1, figsize=(6, 5))
-    colors = plt.cm.jet(np.linspace(0, 1, 16))                                  # type: ignore 
+    # organize colors for final plot by energy 
+    # red -> blue from top-to-bottom
+    mean_energies = energies.mean(axis=0)
+    ranks = np.argsort(np.argsort(mean_energies))
+    colors = plt.cm.jet(np.linspace(0, 1, n_states))
+    state_colors = colors[ranks]
 
-    for k in range(16):
-        axis.plot(B_fields, energies[:, k], lw=1, c=colors[k], label=labels[k]) # type: ignore
-    
+    fig, axis = plt.subplots(1, 1, figsize=(6.55, 5))
+    for k in range(n_states):
+        axis.plot(B_fields, energies[:, k], lw=1, c=state_colors[k], label=labels[k])
+
     plt.xlabel("B [G]")
     plt.ylabel("Energy [eV]")
-    plt.legend(fontsize=6)
+    plt.legend(fontsize=6, loc='upper right', ncol=2)
     plt.title(f"{method_name} Energy [eV] vs. B [G]")
 
-    # adding the simulation parameters in the plot 
-    param_lines = [f"{k} = {float(v):.3g}" for k, v in params.items()]
-    param_text  = "\n".join(param_lines)
+    # adding parameters to the right of the figure 
+    # aligning for aesthetics
+    unit_map = {
+        'J':      'eV',
+        'Aa1':    'eV',
+        'Aa2':    'eV', 
+        'Ab1':    'eV', 
+        'Ab2':    'eV', 
+        'A2_iso': 'eV',
+        'B0':     'G',
+        'mu_B':   'eV/G',
+        'mu_N':   'eV/G',
+        'D1':     'eV',
+        'D2':     'eV',
+    }
+    max_key_len = max(len(k) for k in params)
+    param_lines = []
+    for k, v in params.items():
+        unit = unit_map.get(k, '')
+        unit_str = f" {unit}" if unit else ''
+        key_str = k.rjust(max_key_len)
+        value_str = f"{float(v):.3g}"
+        param_lines.append(f"{key_str} = {value_str}{unit_str}")
+
+    max_line = max(len(s) for s in param_lines)
+    title   = "Parameters"
+    underline = "‾" * max(max_line, len(title))
+    param_text = (
+        f"{title.center(len(underline))}\n"
+        f"{underline}\n"
+        + "\n".join(param_lines)
+    )
+
     fig.subplots_adjust(right=0.75)
     axis.text(
-        1.02, 0.5,                          
+        1.05, 0.5,
         param_text,
         transform=axis.transAxes,
         va="center", ha="left",
         fontsize=8,
         family="monospace",
-        bbox=dict(boxstyle="round,pad=0.3",
-                  facecolor="white",
-                  edgecolor="gray",
-                  alpha=0.8),
+        bbox=dict(
+            facecolor="white",
+            edgecolor="gray",
+            alpha=0.8,
+        ),
     )
-    
-    plt.tight_layout()
-    os.makedirs(outdir, exist_ok=True)
 
+    # adjust method name for filename
+    file_key = method_name
     if method_name == "zeeman_hyperfine_zfs_exchange":
-        method_name = "full_spin_hamiltonian"   
-    fname = outdir / f"{method_name}_sweep.png"
-    fig.savefig(fname , dpi=300)
-    logging.info(f" {method_name} simulation saved to {fname}.")
+        file_key = "full_spin_hamiltonian"
+    fname = outdir / f"{file_key}_sweep.png"
+    plt.tight_layout()
+    fig.savefig(fname, dpi=300)
+    logging.info(f" {file_key} simulation saved to \n {fname}.\n")
     
-
 if __name__ == "__main__":
-    sweep( 
+    """sweep(
        method_name = "zeeman_hyperfine_zfs_exchange", 
        b_sweep=(-40, 40, 201), 
        verbose=False, 
        outdir = Path.home() / "nasa/hamiltonian/src/" / "media"
-    )
+    )"""
 
+
+for method_name in [
+    "zeeman_only", 
+    "hyperfine_only", 
+    "exchange_only", 
+    "zfs_only", 
+    "zeeman_hyperfine",
+    "zeeman_exchange", 
+    "zeeman_zfs", 
+    "hyperfine_exchange", 
+    "hyperfine_zfs", 
+    "zfs_exchange", 
+    "zeeman_hyperfine_zfs", 
+    "zeeman_hyperfine_exchange", 
+    "hyperfine_zfs_exchange", 
+    "zeeman_hyperfine_zfs_exchange", 
+]: 
+    sweep(
+        method_name = method_name, 
+        b_sweep     = (-40, 40, 201), 
+        verbose     = False, 
+    )

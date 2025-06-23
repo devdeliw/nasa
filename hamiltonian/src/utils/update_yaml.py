@@ -2,7 +2,14 @@ from ruamel.yaml import YAML
 from pathlib import Path
 
 def update_B0(yaml_path: Path, B_value: float):
-    # Load params.yaml, update the zeeman.B0 key, and write back.
+    """
+    Loads the `yaml_path`. Update the "zeeman.B0" key value, 
+    and write back. 
+
+    Ideally for speed, one would update B0 outside after 
+    loading the yaml parameters once. 
+
+    """
 
     yaml = YAML()
     yaml.indent(mapping=2, sequence=4, offset=2)
