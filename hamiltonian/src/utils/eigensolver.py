@@ -70,12 +70,15 @@ class Eigensolver(Hamiltonian):
 
     }
     
-    def __init__(self, method_name: str, verbose: bool = False):
+    def __init__(
+            self, method_name: str, verbose: bool = False,
+            yaml_path = Path.home() / "nasa/hamiltonian/src/utils/" / "params.yaml"
+    ):
         super().__init__()
         self.method_name = method_name 
         self.verbose = verbose 
 
-        self.yaml_path = Path.home() / "nasa/hamiltonian/src/utils" / "params.yaml"
+        self.yaml_path = yaml_path
         self.logger = logging.getLogger(__name__)
 
     def load_params(self) -> dict:

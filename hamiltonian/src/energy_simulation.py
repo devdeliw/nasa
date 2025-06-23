@@ -13,13 +13,13 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 # parameter file location
-yaml_path = Path.home() / "nasa/hamiltonian/src/utils" / "params.yaml" 
+yaml_path = Path.home() / "nasa/hamiltonian/src/utils/" / "params.yaml" 
 
 def sweep(
         method_name: str, 
         b_sweep: tuple  = (-40, 40, 201),
         verbose: bool   = False, 
-        outdir: Path    = Path.home() / "nasa/hamiltonian/src/" / "media"
+        outdir: Path    = Path.home() / "nasa/hamiltonian/src/" / "media/"
 ):
     """
     Sweeps across B and plots Energy [eV] vs. B [G] for the 
@@ -48,7 +48,11 @@ def sweep(
 
     """
     
-    solver = Eigensolver(method_name=method_name, verbose=verbose) 
+    solver = Eigensolver(
+        method_name=method_name, 
+        verbose=verbose, 
+        yaml_path=yaml_path
+    ) 
     params = solver.load_params()
 
     B_fields = np.linspace(*b_sweep)
@@ -65,25 +69,25 @@ def sweep(
         
         # maintain eigenvector ordering from LAPACK eigensolver. 
         if prev_v is None:
-            solver._log_eigenvectors()           # populates solver.combos
-            energies[i] = solver.w.real          # type: ignore
-            prev_v      = solver.v               # (16,16), columns are eigenvectors 
+            solver._log_eigenvectors()              # populates solver.combos
+            energies[i] = solver.w.real             # type: ignore
+            prev_v      = solver.v                  # (16,16), columns are eigenvectors 
             labels      = solver.labels.copy() 
         else:
             # Hungarian Algorithm
-            C = np.abs(prev_v.conj().T @ solver.v)      # 16×16 overlap matrix
-            order = np.argmax(C, axis=1)                # for each old column, find new one with max overlap 
+            C = np.abs(prev_v.conj().T @ solver.v)  # 16×16 overlap matrix
+            order = np.argmax(C, axis=1)            # for each old column, find new one with max overlap 
             
             # re-order eigenvalues & eigenvectors
-            energies[i] = solver.w[order].real              # type: ignore 
-            prev_v      = solver.v[:, order]                # type: ignore
+            energies[i] = solver.w[order].real                                  # type: ignore 
+            prev_v      = solver.v[:, order]                                    # type: ignore
 
             # re-order labels 
-            labels = [labels[old_idx] for old_idx in order] # type: ignore
+            labels = [labels[old_idx] for old_idx in order]                     # type: ignore 
 
     # generating sweep plot
     fig, axis = plt.subplots(1, 1, figsize=(6, 5))
-    colors = plt.cm.jet(np.linspace(0, 1, 16)) # type: ignore 
+    colors = plt.cm.jet(np.linspace(0, 1, 16))                                  # type: ignore 
 
     for k in range(16):
         axis.plot(B_fields, energies[:, k], lw=1, c=colors[k], label=labels[k]) # type: ignore
@@ -93,7 +97,7 @@ def sweep(
     plt.legend(fontsize=6)
     plt.title(f"{method_name} Energy [eV] vs. B [G]")
 
-    # Adding the simulation parameters in the plot 
+    # adding the simulation parameters in the plot 
     param_lines = [f"{k} = {float(v):.3g}" for k, v in params.items()]
     param_text  = "\n".join(param_lines)
     fig.subplots_adjust(right=0.75)
