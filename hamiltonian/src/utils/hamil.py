@@ -14,23 +14,25 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 class Hamiltonian():
-
     """
+    Constructs numerical spin Hamiltonians by combining any subset 
+    of the following interactions:
+        * Zeeman, 
+        * Hyperfine, 
+        * Zero-Field Splitting (ZFS),
+        * Exchange Interaction.
 
-    Constructs numerical spin Hamiltonians by combining any subset of the following interactions:
-    Zeeman, Hyperfine, Zero-Field Splitting (ZFS), and Exchange Interaction.
+    Each type of Hamiltonian requires a specific set of physical 
+    constants as input parameters.  For example:  
+        * Using `zfs_only()` requires only the ZFS parameters `D1` and `D2`.  
+        * Using `zeeman_zfs()` requires parameters for Zeeman and ZFS terms, 
+          including D1, D2, B0, g_e, mu_B, g_n1, g_n2, mu_N`.
 
-    Each type of Hamiltonian requires a specific set of physical constants as input parameters.  
-    For example:  
-    - Using `zfs_only()` requires only the ZFS parameters `D1` and `D2`.  
-    - Using `zeeman_zfs()` requires parameters for Zeeman and ZFS terms, including  
-      `D1, D2, B0, g_e, mu_B, g_n1, g_n2, mu_N`.
+    The full Spin Hamiltonian is the combination of all four interactions, 
+    which can be constructed using methods like `zeeman_hyperfine_zfs_exchange()`.
 
-    The full Spin Hamiltonian is the combination of all four interactions, which can be
-    constructed using methods like `zeeman_hyperfine_zfs_exchange()`.
-
-    Parameters for each interaction must be provided according to the chosen combination to
-    accurately define the Hamiltonian matrix.
+    Parameters for each interaction must be provided according to the chosen 
+    combination to accurately define the Hamiltonian matrix.
 
     """
 
@@ -143,10 +145,9 @@ class Hamiltonian():
 
 The following functions allow us to build combinations of Hamiltonians 
 as an attribute of Hamiltonian() class. For example, 
-
-`Hamiltonian.zeeman_exchange(<only required parameters>)` will build 
-the zeeman + exchange Hamiltonian, only asking for the required 
-parameters in the zeeman + exchange Hamiltonian itself. 
+    * `Hamiltonian.zeeman_exchange(<only required parameters>)` will build 
+       the zeeman + exchange Hamiltonian, only asking for the required 
+       parameters in the zeeman + exchange Hamiltonian itself. 
 
 Allowed Functions: 
 ------------------ 
@@ -181,8 +182,10 @@ def _make_combo(active):
     needed = list(itertools.chain.from_iterable(
         Hamiltonian._COMPONENT_SYMBOLS[c] for c in active))
 
-    sig = inspect.Signature([inspect.Parameter(p, inspect.Parameter.POSITIONAL_OR_KEYWORD)
-                             for p in needed])
+    sig = inspect.Signature([
+        inspect.Parameter(p, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        for p in needed
+    ])
 
     def method(self, *args, **kw):
         bound = sig.bind(*args, **kw)
