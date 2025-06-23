@@ -21,7 +21,6 @@ def sweep(
         verbose: bool   = False, 
         outdir: Path    = Path.home() / "nasa/hamiltonian/src/" / "media"
 ):
-    
     """
     Sweeps across B and plots Energy [eV] vs. B [G] for the 
     provided `method_name` Hamiltonian (See Args). 

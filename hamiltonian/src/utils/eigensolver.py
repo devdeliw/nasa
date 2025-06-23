@@ -17,23 +17,23 @@ logging.basicConfig(level=logging.INFO)
 class Eigensolver(Hamiltonian): 
     """ 
     Computes the spectral decomposition of a Hamiltonian and saves: 
-    - eigenvalues:              - 1D np.array w 
-    - diagonal matrix D:        - D = diag(w)
-    - eigenvector matrix P:     - columns are eigenvectors in original basis. 
+    * eigenvalues:              - 1D np.array w 
+    * diagonal matrix D:        - D = diag(w)
+    * eigenvector matrix P:     - columns are eigenvectors in original basis. 
 
     """
 
     _BASIS_MAP = {
-        0: '|1,1>|↑,↑>',
-        1: '|1,1>|↑,↓>', 
-        2: '|1,1>|↓,↑>', 
-        3: '|1,1>|↓,↓>', 
-        4: '|1,0>|↑,↑>', 
-        5: '|1,0>|↑,↓>', 
-        6: '|1,0>|↓,↑>', 
-        7: '|1,0>|↓,↓>', 
-        8: '|0,0>|↑,↑>', 
-        9: '|0,0>|↑,↓>', 
+        0:  '|1,1>|↑,↑>',
+        1:  '|1,1>|↑,↓>', 
+        2:  '|1,1>|↓,↑>', 
+        3:  '|1,1>|↓,↓>', 
+        4:  '|1,0>|↑,↑>', 
+        5:  '|1,0>|↑,↓>', 
+        6:  '|1,0>|↓,↑>', 
+        7:  '|1,0>|↓,↓>', 
+        8:  '|0,0>|↑,↑>', 
+        9:  '|0,0>|↑,↓>', 
         10: '|0,0>|↓,↑>',
         11: '|0,0>|↓,↓>', 
         12: '|1,-1>|↑,↑>', 
@@ -44,21 +44,30 @@ class Eigensolver(Hamiltonian):
 
 
     _PARAM_SECTIONS = {
+
+        # single hamiltonian
         "zeeman_only":                  ["zeeman"],
         "hyperfine_only":               ["hyperfine"],
         "zfs_only":                     ["zfs"],
         "exchange_only":                ["exchange"],
+
+        # two-component hamiltonian
         "zeeman_hyperfine":             ["zeeman", "hyperfine"],
         "zeeman_zfs":                   ["zeeman", "zfs"],
         "zeeman_exchange":              ["zeeman", "exchange"],
         "hyperfine_zfs":                ["hyperfine", "zfs"],
         "hyperfine_exchange":           ["hyperfine", "exchange"],
         "zfs_exchange":                 ["zfs", "exchange"],
+
+        # three-component hamiltonian
         "zeeman_hyperfine_zfs":         ["zeeman", "hyperfine", "zfs"],
         "zeeman_hyperfine_exchange":    ["zeeman", "hyperfine", "exchange"],
         "zeeman_zfs_exchange":          ["zeeman", "zfs", "exchange"],
         "hyperfine_zfs_exchange":       ["hyperfine", "zfs", "exchange"],
-        "zeeman_hyperfine_zfs_exchange":["zeeman", "hyperfine", "zfs", "exchange"], # full spin hamiltonian
+
+        # full spin hamiltonian
+        "zeeman_hyperfine_zfs_exchange":["zeeman", "hyperfine", "zfs", "exchange"], 
+
     }
     
     def __init__(self, method_name: str, verbose: bool = False):
@@ -66,15 +75,23 @@ class Eigensolver(Hamiltonian):
         self.method_name = method_name 
         self.verbose = verbose 
 
-        home = Path.home() 
-        folder = home / "nasa" / "hamiltonian" 
-        params = folder / "src" / "utils" / "params.yaml"
-        self.yaml_path = Path(params)
+        self.yaml_path = Path.home() / "nasa/hamiltonian/src/utils" / "params.yaml"
         self.logger = logging.getLogger(__name__)
 
-    def load_params(self) -> dict: 
-        with self.yaml_path.open() as f: 
-            cfg = yaml.safe_load(f)
+    def load_params(self) -> dict:
+        """ 
+        Loads parameters from Eigensolver::self.yaml_path file. 
+        Returns dict of only of parameters involved with 
+        Eigensolver::self.method_name hamiltonian combination. 
+
+        """
+
+        try:  
+            with self.yaml_path.open() as f: 
+                cfg = yaml.safe_load(f)
+        except FileNotFoundError: 
+            self.logger.error(" Param file {self.yaml_path} not found.")
+            raise 
 
         if self.method_name not in self._PARAM_SECTIONS: 
             raise KeyError(f"No PARAM_SECTIONS entry for {self.method_name!r}") 
@@ -96,48 +113,70 @@ class Eigensolver(Hamiltonian):
                 "Ab2": A2_iso,
             })
 
-            params.pop("A1_iso", None) 
-            params.pop("A2_iso", None) 
+            params.pop("A1_iso", None) # remove A_iso...
+            params.pop("A2_iso", None) # not necessary anymore. 
         return params
 
     def _set_hamiltonian(self) -> None: 
+        """
+        Builds the numerical hamiltonian combination from 
+        Eigensolver::method_name.
+
+        This is done by substituting the parameters from 
+        self.load_params which are defined in 
+        Eigensolver::self.yaml_path.
+
+        """
+
         params = self.load_params() 
         method = getattr(self, self.method_name)
         self.H = method(**params)
 
     def _spectral_decomposition(self) -> None:
         """ 
-        Calculates eigenvalues and eigenvectors from Hamiltonian. 
-        The eigenvectors are in the eigenbasis. 
+        Calculates eigenvalues and eigenvectors from 
+        the calculated numerical hamiltonian. 
+
+        The eigenvectors are in the eigenbasis, which could 
+        or could not be the same as the original hamiltonian 
+        basis. 
 
         """
 
         assert self.H is not None, "Hamiltonian not yet built. Call set_hamiltonian()."
-        H = self.H 
 
-        # Hermicity 
-        if not np.allclose(H, H.conj().T, atol=1e-10): 
+        # hermicity 
+        if not np.allclose(self.H, self.H.conj().T, atol=1e-10): 
             self.logger.warning("Hamiltonian is not Hermitian; results may be invalid.") 
 
-        if self.verbose: self.logger.info(" Starting spectral decomposition \n")
-        self.w, self.v = linalg.eig(H)  # type: ignore
-        if self.verbose: self.logger.info(" Eigenvalues: %s", self.w) 
+        if self.verbose: 
+            self.logger.info(" Starting spectral decomposition \n")
+
+        self.w, self.v = linalg.eig(self.H)                     # type: ignore
+
+        if self.verbose: 
+            self.logger.info(" Eigenvalues: %s", self.w) 
 
     def _log_eigenvectors(self, abs_tol: float = 1e-6) -> None:
         """ 
-        Converts eigenvectors back into original Hamiltonian basis. 
-        Saves eigenvectors as linear combination of |psi> from 
+        Converts eigenvectors to linear combination of |psi> from 
         original basis. 
 
         Args: 
             * abs_tol: float  
-            States w/ coefficients below this value are not considered 
-            for eigenvector decomposition in the original basis. 
+                States w/ coefficients below this value are not considered 
+                for eigenvector decomposition in the original basis. 
+
+        E.g., |eigenvector> = a|1,0>|↓,↑> + b|0,0>||↓,↑> + ...  
+
         """
 
-        assert self.w is not None and self.v is not None, "Diagonalisation missing."
+        assert self.w is not None and self.v is not None, \
+        "Diagonalisation missing. Call _spectral_decomposition()"
 
-        self.labels = []   # For each eigenvector, will store the dominant coupled-basis state.
+        self.labels = []   # for each eigenvector, 
+                           # will store the dominant coupled-basis state.
+
         for idx, (lam, vec) in enumerate(zip(self.w, self.v.T)): # type: ignore
             comps = []
             vmax = np.max(np.abs(vec))
@@ -154,6 +193,8 @@ class Eigensolver(Hamiltonian):
             self.labels.append(max_state)
 
             combo = " + ".join(comps) if comps else "0"
+            
+            # display eigendecomposition in original basis 
             if self.verbose: self.logger.info(
                 f"\nEigenvector {idx:2d} (λ = {lam:8.3e}):\n  {combo}\n"
             )
@@ -161,7 +202,7 @@ class Eigensolver(Hamiltonian):
     def solve(self) -> "Eigensolver": 
         """ 
         Builds the Hamiltonian, diagonalizes it, 
-        log spectrum + eigenvectors, then returns *self*. 
+        log spectrum + eigenvectors, then returns self. 
 
         """
 

@@ -36,18 +36,18 @@ class Hamiltonian():
 
     # All constants in Hamiltonian 
     _COMPONENT_SYMBOLS = {
-        "zeeman"  : ["B0", "g_e", "mu_B", "g_n1", "g_n2", "mu_N"],
-        "hyperfine": ["Aa1", "Aa2", "Ab1", "Ab2"],   
-        "zfs"     : ["D1", "D2"],
-        "exchange": ["J"],
+        "zeeman"    : ["B0", "g_e", "mu_B", "g_n1", "g_n2", "mu_N"],
+        "hyperfine" : ["Aa1", "Aa2", "Ab1", "Ab2"],   
+        "zfs"       : ["D1", "D2"],
+        "exchange"  : ["J"],
     }
 
     def __init__(self, *, 
-        zeeman=True, 
-        hyperfine=True, 
-        zfs=True, 
-        exchange=True,
-        template_folder=Path.home() / "nasa" / "hamiltonian" / "pickle"
+        zeeman          = True, 
+        hyperfine       = True, 
+        zfs             = True, 
+        exchange        = True,
+        template_folder = Path.home() / "nasa/hamiltonian/pickle/"
     ):
 
         self.zeeman     = zeeman  
@@ -59,8 +59,11 @@ class Hamiltonian():
 
     @lru_cache(maxsize=None)
     def _load(self, stem) -> sp.Matrix:
-        # Loads an individual Hamiltonian 
-        # 16x16 
+        """
+        Loads an individual Hamiltonian. 
+        16x16.
+
+        """
 
         try:
             with open(self.template_folder / f"{stem}.pickle", "rb") as f:
@@ -70,8 +73,10 @@ class Hamiltonian():
             raise
 
     def _build_spin(self) -> sp.Matrix:
-        # Builds the Spin Hamiltonian Template
-        # 16x16
+        """
+        Builds the spin hamiltonian combination asked for. 
+
+        """
 
         H = sp.zeros(16, 16)
         if self.zeeman:    H += self._load("zeeman")
@@ -83,32 +88,41 @@ class Hamiltonian():
     def hamiltonian(self, *,                 
         B0=0, g_e=0, mu_B=0, g_n1=0, g_n2=0, mu_N=0,
         D1=0, D2=0, J=0,
-        hbar=0, Aa1=0, Aa2=0, Ab1=0, Ab2=0,
+        Aa1=0, Aa2=0, Ab1=0, Ab2=0,
         dtype=float,
     ) -> np.ndarray:
-        # Builds the Numerical Spin Hamiltonian 
-        # 16x16
+        """
+        Converts the symbolic hamiltonian to a numerical one. 
+        I.e. substitutes values for all the components based on
+        input parameters. 
+        
+        """
 
         H_sym = self._build_spin()
         subs = {
+
             # Zeeman 
-            sp.Symbol("B0"):B0, 
-            sp.Symbol("g_e"):g_e, 
-            sp.Symbol("mu_B"):mu_B,
-            sp.Symbol("g_n1"):g_n1, 
-            sp.Symbol("g_n2"):g_n2, 
-            sp.Symbol("mu_N"):mu_N,
+            sp.Symbol("B0")     : B0, 
+            sp.Symbol("g_e")    : g_e, 
+            sp.Symbol("mu_B")   : mu_B,
+            sp.Symbol("g_n1")   : g_n1, 
+            sp.Symbol("g_n2")   : g_n2, 
+            sp.Symbol("mu_N")   : mu_N,
 
             # ZFS 
-            sp.Symbol("D1"):D1, sp.Symbol("D2"):D2,
+            sp.Symbol("D1")     : D1, 
+            sp.Symbol("D2")     : D2,
 
             # Exchange 
-            sp.Symbol("J"):J,
+            sp.Symbol("J")      : J,
 
             # Hyperfine 
-            sp.Symbol("Aa1"):Aa1, sp.Symbol("Aa2"):Aa2,
-            sp.Symbol("Ab1"):Ab1, sp.Symbol("Ab2"):Ab2,
-        }
+            sp.Symbol("Aa1")    : Aa1, 
+            sp.Symbol("Aa2")    : Aa2,
+            sp.Symbol("Ab1")    : Ab1, 
+            sp.Symbol("Ab2")    : Ab2,
+
+        }  
 
         H_num = H_sym.subs(subs).evalf() 
         return np.array(H_num.tolist(), dtype=dtype) 
@@ -118,7 +132,9 @@ class Hamiltonian():
         return dict.fromkeys(
             [
                 "B0","g_e","mu_B","g_n1","g_n2","mu_N",
-                "D1","D2","J","Aa1","Aa2","Ab1","Ab2","hbar"
+                "D1","D2",
+                "J",
+                "Aa1","Aa2","Ab1","Ab2",
             ], 
             0.0
         )
@@ -155,6 +171,9 @@ Hamiltonian()
 
     .zeeman_hyperfine_zfs_exchange (the full Spin Hamiltonian) 
 
+* Note these functions are built at runtime 
+* Hence, they will be unknown until program compiles. 
+
 """
  
 def _make_combo(active):
@@ -171,7 +190,7 @@ def _make_combo(active):
         p.update(bound.arguments)       
         return self.hamiltonian(**p)
 
-    method.__signature__ = sig
+    method.__signature__ = sig              # type: ignore
     method.__name__ = name
     method.__doc__ = f"Hamiltonian with {' + '.join(active)} term(s) only."
     return name, method
@@ -181,7 +200,7 @@ for r in range(1,5):
         setattr(Hamiltonian, *_make_combo(combo))
 
 if __name__ == "__main__":
-    H = Hamiltonian().hyperfine_only(
+    H = Hamiltonian().hyperfine_only(       # type: ignore 
         Aa1=1.46e-7, Ab1=1.46e-7, Aa2=2.81e-7, Ab2=2.81e-7,
     )
     print(H)
