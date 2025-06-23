@@ -3,7 +3,6 @@
 ##  Mentor @ Dr. Daniel R. Hart. 
 
 #!/usr/bin/env python3
-import os
 import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,15 +25,20 @@ def sweep(
         outdir: Path    = Path.home() / "nasa/hamiltonian/src/" / "media/"
 ):
     """
-    Sweeps across B and plots Energy [eV] vs. B [G] for the 
-    provided `method_name` Hamiltonian (See Args).
+    Sweeps across B and plots energy [eV] vs. magnetic field B [G] for 
+    the provided `method_name` Hamiltonian (see Args).
 
-    Maintains consistent eigenvector labeling via Hungarian matching, 
-    then assigns colors by ordering modes (states) by their average energy 
-    to get a smooth rainbow gradient (highest-energy = red, lowest = blue).
+    Maintains consistent eigenvector labeling via Hungarian (Kuhn–Munkres)
+    matching. Since with complicated Hamiltonians the eigenbasis isn't the 
+    same as the coupled-triplet basis, this is the next best thing 
+    labeling-wise. 
+
+    I assign colors by ordering modes by their average energy, 
+    higher energies are redder, lower energies are bluer. 
+
     """
 
-    logging.info(f" Starting Eigensimulation for {method_name!r}")
+    logging.info(f" Starting eigensimulation for {method_name!r}")
     
     solver = Eigensolver(
         method_name=method_name, 
@@ -59,7 +63,7 @@ def sweep(
         if prev_v is None:
             solver._log_eigenvectors()
             energies[i] = solver.w.real
-            prev_v      = solver.v               # columns are eigenvectors
+            prev_v      = solver.v                  # columns are eigenvectors
             labels      = solver.labels.copy()
         else:
             # hungarian matching
@@ -71,6 +75,21 @@ def sweep(
             prev_v      = solver.v[:, col_idx]
             labels      = [labels[j] for j in col_idx]
 
+    # find all degeneracy points 
+    intersections = []
+    for k in range(n_states):
+        for l in range(k+1, n_states):
+            delta = energies[:,k] - energies[:,l]
+            # look for sign‐changes between adjacent B steps
+            idx = np.where(delta[:-1] * delta[1:] < 0)[0]
+            for j in idx:
+                # linear interpolation fraction
+                t = delta[j] / (delta[j] - delta[j+1])
+                B_cross = B_fields[j] + t*(B_fields[j+1] - B_fields[j])
+                E_cross = energies[j,k] + t*(energies[j+1,k] - energies[j,k])
+                intersections.append((B_cross, E_cross))
+    intersections = np.array(intersections) 
+
     # organize colors for final plot by energy 
     # red -> blue from top-to-bottom
     mean_energies = energies.mean(axis=0)
@@ -81,6 +100,18 @@ def sweep(
     fig, axis = plt.subplots(1, 1, figsize=(6.55, 5))
     for k in range(n_states):
         axis.plot(B_fields, energies[:, k], lw=1, c=state_colors[k], label=labels[k])
+
+    # plot degeneracy points
+    if intersections.size:
+        axis.scatter(
+            intersections[:,0],
+            intersections[:,1],
+            marker=".",
+            s=5,      
+            c='k',  
+            zorder=5,
+            label='_degeneracies_'  
+        )
 
     plt.xlabel("B [G]")
     plt.ylabel("Energy [eV]")
@@ -120,7 +151,7 @@ def sweep(
         + "\n".join(param_lines)
     )
 
-    fig.subplots_adjust(right=0.75)
+    fig.subplots_adjust(right=0.9)
     axis.text(
         1.05, 0.5,
         param_text,
@@ -139,38 +170,54 @@ def sweep(
     file_key = method_name
     if method_name == "zeeman_hyperfine_zfs_exchange":
         file_key = "full_spin_hamiltonian"
+
     fname = outdir / f"{file_key}_sweep.png"
     plt.tight_layout()
     fig.savefig(fname, dpi=300)
-    logging.info(f" {file_key} simulation saved to \n {fname}.\n")
-    
+    logging.info(f" {file_key!r} simulation saved to \n {fname}.\n")
+
+
+def _run_all(
+    b_sweep: tuple = (-40, 40, 200), 
+    verbose: bool  = False,
+    outdir: Path   = Path.home() / "nasa/hamiltonian/src/" / "media/",  
+):
+    """ Run the eigensimulation for every Hamiltonian combination. """
+
+    for method_name in [
+        "zeeman_only", 
+        "hyperfine_only",
+        "exchange_only", 
+        "zfs_only", 
+
+        "zeeman_hyperfine",
+        "zeeman_exchange", 
+        "zeeman_zfs", 
+        "hyperfine_exchange", 
+        "hyperfine_zfs", 
+        "zfs_exchange",
+
+        "zeeman_zfs_exchange", 
+        "zeeman_hyperfine_zfs", 
+        "zeeman_hyperfine_exchange", 
+        "hyperfine_zfs_exchange", 
+
+        "zeeman_hyperfine_zfs_exchange", 
+    ]: 
+        sweep(
+            method_name = method_name, 
+            b_sweep     = b_sweep,      # (int, int, int)  
+            verbose     = verbose, 
+            outdir      = outdir, 
+        )
+     
 if __name__ == "__main__":
     """sweep(
        method_name = "zeeman_hyperfine_zfs_exchange", 
        b_sweep=(-40, 40, 201), 
        verbose=False, 
-       outdir = Path.home() / "nasa/hamiltonian/src/" / "media"
-    )"""
+       outdir = Path.home() / "nasa/hamiltonian/src/" / "media/"
+    )""" 
 
+    _run_all()
 
-for method_name in [
-    "zeeman_only", 
-    "hyperfine_only", 
-    "exchange_only", 
-    "zfs_only", 
-    "zeeman_hyperfine",
-    "zeeman_exchange", 
-    "zeeman_zfs", 
-    "hyperfine_exchange", 
-    "hyperfine_zfs", 
-    "zfs_exchange", 
-    "zeeman_hyperfine_zfs", 
-    "zeeman_hyperfine_exchange", 
-    "hyperfine_zfs_exchange", 
-    "zeeman_hyperfine_zfs_exchange", 
-]: 
-    sweep(
-        method_name = method_name, 
-        b_sweep     = (-40, 40, 201), 
-        verbose     = False, 
-    )
