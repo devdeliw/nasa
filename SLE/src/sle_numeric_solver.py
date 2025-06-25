@@ -157,6 +157,7 @@ if __name__ == "__main__":
     dt = time.time()-t0
 
     print(f"Numeric solve: {dt:4f}s. Trace={np.trace(rho_num).round(2)}")
+    print(rho_num)
 
     # store functional      
     outdir = pathlib.Path.home()/"nasa/SLE/pickle"

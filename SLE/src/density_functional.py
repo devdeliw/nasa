@@ -51,5 +51,3 @@ def solve_density(
         raise Exception("Density matrix has negative eigenvalues")
     
     return rho 
-
-
