@@ -1,7 +1,7 @@
 import pickle 
 from pathlib import Path
 
-PICKLE_PATH = Path.home() / "nasa/hamiltonian/src/pickle/"
+PICKLE_PATH = Path.home() / "nasa/hamiltonian/pickle/"
 
 def _load_hamiltonian(hamil_name: str): 
     try: 
