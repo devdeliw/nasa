@@ -1,7 +1,6 @@
-# edmr_functional.py
-
 import numpy as np
 from density_functional import make_density_solver, load_base_params
+from tqdm import tqdm
 
 def make_edmr_model(
     rho_fn=None,
@@ -9,14 +8,7 @@ def make_edmr_model(
     phys_keys=None
 ):
     """
-    Build and return the model function:
-    
-        I_model(B_array, A, I0, *phys_vals) -> numpy.ndarray
-    
-    where:
-        * B_array     : 1D array of field values
-        * A, I0       : amplitude & offset
-        * *phys_vals  : the physical parameters (in order phys_keys)
+    Build and return the current model fitting functional.
 
     Args: 
         * rho_fn 
@@ -25,6 +17,12 @@ def make_edmr_model(
             * Singlet Projection Operator 
         * phys_keys 
             * Keys for Physical Parameters 
+
+    Returns: 
+        * I_model(B_array, A, I0, *phys_vals) -> np.ndarray
+            * B_array       : 1D array of field values 
+            * A, I0         : amplitude & offset 
+            * *phys_vals    : the physical parameters (in order of phys_keys)
     """
 
     if rho_fn is None or P_S is None or phys_keys is None:
@@ -44,10 +42,10 @@ def make_edmr_model(
         B_array = np.asarray(B_array, dtype=float)
         I_pred  = np.empty_like(B_array)
 
-        for idx, B in enumerate(B_array):
+        for idx, B in enumerate(tqdm(B_array, desc="Calculating Simulated Currents")):
             rho  = rho_fn(B, phys_params=phys_params, verbose=False)
             sing = np.real(np.trace(P_S @ rho))
             I_pred[idx] = A * sing + I0
 
         return I_pred
-    return I_model
+    return I_model  

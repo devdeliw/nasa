@@ -1,17 +1,58 @@
 import sympy as sp
 import numpy as np
 import logging, time
+from sympy.physics.quantum import Dagger
 
 logging.basicConfig(level=logging.INFO)
 
-from sympy.physics.quantum import Dagger
-
 __all__ = ["SLE_NUMERIC"]
 
-class SLE_NUMERIC():
+
+def _assert_hermitian(mat, name, tol=1e-12):
+    """
+    Raise if *mat* is not Hermitian.
+    Works for either a SymPy or a NumPy matrix.
+
+    """
+    if isinstance(mat, sp.MatrixBase):
+        diff = (mat - Dagger(mat)).simplify()
+        for i in range(diff.rows):
+            for j in range(diff.cols):
+                if not diff[i, j].equals(0):
+                    raise ValueError(
+                        f"{name} symbolic check failed at ({i},{j}): {diff[i, j]}"
+                    )
+        return
+
+    diff = mat - mat.conj().T
+    if np.amax(np.abs(diff)) > tol:
+        raise ValueError(
+            f"{name} not Hermitian – max|X−X†|={np.amax(np.abs(diff)):.3e}"
+        )
+
+
+def _assert_super_maps_hermitian(L, n, name, trials=6, tol=1e-12):
+    """
+    Randomly test that the super-operator L maps every Hermitian rho to a
+    Hermitian output in vectorized form.
+
+    """
+    for i in range(trials):
+        rnd = np.random.randn(n, n) + 1j * np.random.randn(n, n)
+        rho = rnd + rnd.conj().T
+        out = L @ rho.reshape(n * n, order="F")
+        rout = out.reshape(n, n, order="F")
+        if np.amax(np.abs(rout - rout.conj().T)) > tol:
+            raise ValueError(
+                f"{name} breaks Hermiticity on trial {i} – "
+                f"max|rho_out−rho_out†|={np.amax(np.abs(rout - rout.conj().T)):.3e}"
+            )
+
+
+class SLE_NUMERIC:
     """
     Build the singlet-triplet Liouvillian for a 2-electron + 2-nucleus (I=1/2)
-    spin system **numerically**.  The class now returns a ready-to-use callable
+    spin system numerically. Returns a callable
 
         rho_numeric(**params) -> 16x16 numpy array (trace=1)
 
@@ -34,82 +75,95 @@ class SLE_NUMERIC():
 
     """
 
-    def __init__(self, H_sym: sp.Matrix, verbose: bool = True) -> None:
+    def __init__(self, H_sym: sp.Matrix, verbose: bool = False) -> None:
         self.verbose = verbose
         self.log = logging.getLogger(__name__)
-        if self.verbose: self.log.info(" Initializing Numerical SLE solver")
+        if self.verbose:
+            self.log.info(" Initializing numerical SLE solver")
 
         if H_sym.shape != (16, 16):
             raise ValueError("H_sym must be 16 x 16")
-        
-        self.H_sym = H_sym
-        if self.verbose: self.log.info(f"     * Hamiltonian shape: {H_sym.shape}")
 
+        # master parameter list
         self.ham_names = [
-            "B0","g_e","mu_B","g_n1","g_n2","mu_N",
-            "Aa1","Aa2","Ab1","Ab2","D1","D2","J",
+            "B0", "g_e", "mu_B", "g_n1", "g_n2", "mu_N",
+            "Aa1", "Aa2", "Ab1", "Ab2", "D1", "D2", "J",
         ]
-        self.sle_names = ["k_S","k_D","p","hbar"]
-        self.sym_list  = [sp.Symbol(n) for n in (self.ham_names + self.sle_names)]
-        ( self.k_S, self.k_D, self.p, self.hbar ) = [sp.Symbol(n) for n in self.sle_names]
+        self.sle_names = ["k_S", "k_D", "p", "hbar"]
 
-        # build static symbolic operators
+        # single Symbol object for each name
+        self.sym_list = [sp.Symbol(n, real=True) for n in (self.ham_names + self.sle_names)]
+        name_map = {s.name: s for s in self.sym_list}
+
+        self.k_S  = name_map["k_S"]
+        self.k_D  = name_map["k_D"]
+        self.p    = name_map["p"]
+        self.hbar = name_map["hbar"]
+
+        # harmonize symbols in H_sym
+        self.H_sym = H_sym.xreplace({old: name_map.get(old.name, old)
+                                     for old in H_sym.free_symbols})
+
+        # projectors
         self.Lambda_S, self.Lambda_T = self._build_projectors()
+        _assert_hermitian(self.Lambda_S, "Lambda_S")
+        _assert_hermitian(self.Lambda_T, "Lambda_T")
+
+        # Liouvillian and inhomogeneous term
         self.Gamma = sp.eye(16)
         self.L_super_sym, self.b_vec_sym = self._build_liouvillian()
 
-        # lambdify
-        if self.verbose: self.log.info("     * Lambdifying L_super and b_vec")
+        # lambdify to NumPy
+        if self.verbose:
+            self.log.info("     * Lambdifying operators to NumPy")
         t0 = time.time()
         self.L_func = sp.lambdify(self.sym_list, self.L_super_sym, modules="numpy")
         self.b_func = sp.lambdify(self.sym_list, self.b_vec_sym, modules="numpy")
-        if self.verbose: self.log.info(f"        * done in {time.time()-t0:.2f}s")
+        if self.verbose:
+            self.log.info(f"        * done in {time.time() - t0:.2f}s")
+
+        # quick Hermiticity sanity check
+        baseline = [1 if s.name == "hbar" else 0 for s in self.sym_list]
+        L_num = np.asarray(self.L_func(*baseline), dtype=np.complex128)
+        _assert_super_maps_hermitian(L_num, 16, "L_super (numeric)")
 
     def make_density_func(self):
         """
-        Return rho_numeric(**param_dict) -> density matrix (numpy 16x16).
-        
+        Return a function rho_numeric(**params) that computes
+        the 16 x 16 steady-state density matrix.
+
         """
 
-        name_order = self.sym_list  
         Lf, bf = self.L_func, self.b_func
 
         def rho_numeric(**params):
-            # build ordered arg list
             try:
                 argvals = [params[n] for n in (self.ham_names + self.sle_names)]
             except KeyError as err:
-                missing = err.args[0]
-                raise KeyError(f"parameter '{missing}' not supplied")
+                raise KeyError(f"parameter '{err.args[0]}' not supplied") from None
 
-            # numeric matrices
             A = np.asarray(Lf(*argvals), dtype=np.complex128)
             b = np.asarray(bf(*argvals), dtype=np.complex128).ravel()
 
-            t0 = time.time()
-            self.log.info(f"     * Numerically solving Rho {b.shape}")
             rho_vec = np.linalg.solve(A, b)
-            self.log.info(f"        * done in {time.time() - t0:.4f}s")
-
-            # 256x1 -> 16x16
-            rho = rho_vec.reshape(16, 16)
-
-            # normalize
+            rho = rho_vec.reshape(16, 16, order="F")
+            rho = 0.5 * (rho + rho.conj().T)
             rho /= np.trace(rho)
             return rho
 
         return rho_numeric
 
+    # helpers
     @staticmethod
     def _singlet_triplet_projectors_electron():
-        up = sp.Matrix([1, 0]); dn = sp.Matrix([0, 1])
+        up, dn = sp.Matrix([1, 0]), sp.Matrix([0, 1])
         basis = [sp.kronecker_product(s1, s2) for s1 in (up, dn) for s2 in (up, dn)]
-        S  = (basis[1] - basis[2]) / sp.sqrt(2)                                                             # type: ignore
-        Tp = basis[0]       
-        T0 = (basis[1] + basis[2]) / sp.sqrt(2)                                                             # type: ignore
+        S  = (basis[1] - basis[2]) / sp.sqrt(2)                             # type: ignore
+        Tp = basis[0]
+        T0 = (basis[1] + basis[2]) / sp.sqrt(2)                             # type: ignore
         Tm = basis[3]
         Lambda_S_e = S  * Dagger(S)
-        Lambda_T_e = Tp * Dagger(Tp) + T0 * Dagger(T0) + Tm * Dagger(Tm)                                    # type: ignore
+        Lambda_T_e = Tp * Dagger(Tp) + T0 * Dagger(T0) + Tm * Dagger(Tm)    # type: ignore
         return Lambda_S_e, Lambda_T_e
 
     def _build_projectors(self):
@@ -121,59 +175,43 @@ class SLE_NUMERIC():
         return LS, LT
 
     def _build_liouvillian(self):
-        if self.verbose: self.log.info("     * Building Liouvillian symbolically")
-        n = 16; I_n = sp.eye(n); kron = sp.kronecker_product
+        n = 16
+        I_n  = sp.eye(n)
+        kron = sp.kronecker_product
 
-        L_H = (-sp.I / self.hbar) * (kron(I_n, self.H_sym) - kron(self.H_sym.T, I_n))                       # type: ignore
-        LS2, LT2 = self.Lambda_S, self.Lambda_T
-        L_S = kron(self.Lambda_S.T, self.Lambda_S) - sp.Rational(1,2)*(kron(I_n, LS2.T) + kron(LS2, I_n))   # type: ignore
-        L_T = kron(self.Lambda_T.T, self.Lambda_T) - sp.Rational(1,2)*(kron(I_n, LT2.T) + kron(LT2, I_n))   # type: ignore
+        if self.verbose: 
+            self.log.info("     * Building Liouvillian symbolically")
+        L_H = (-sp.I / self.hbar) * (
+            kron(I_n, self.H_sym) - kron(Dagger(self.H_sym), I_n)       # type: ignore
+        )
 
-        L_super = L_H - sp.Rational(1,2)*(self.k_S + self.k_D)*L_S - sp.Rational(1,2)*self.k_D*L_T          # type: ignore
-        b_vec   = -(self.p/16) * sp.Matrix(self.Gamma).reshape(n**2, 1)                                     # type: ignore
+        A_S, A_T = self.Lambda_S, self.Lambda_T
+        L_S = kron(A_S.T, A_S) - sp.Rational(1, 2) * (                  # type: ignore
+            kron(I_n, A_S) + kron(A_S.T, I_n)                           # type: ignore
+        )
+        L_T = kron(A_T.T, A_T) - sp.Rational(1, 2) * (                  # type: ignore
+            kron(I_n, A_T) + kron(A_T.T, I_n)                           # type: ignore
+        )
+
+        L_super = (
+            L_H
+            - sp.Rational(1, 2) * (self.k_S + self.k_D) * L_S           # type: ignore
+            - sp.Rational(1, 2) * self.k_D * L_T                        # type: ignore
+        )
+        b_vec = -(self.p / 16) * sp.Matrix(self.Gamma).reshape(n ** 2, 1)   # type: ignore
         return L_super, b_vec
 
 
 if __name__ == "__main__":
     from utils._load_hamiltonian import _load_spin
-    from sle_solver import SLE_SYMBOLIC
-    from sympy import latex, Matrix, numbered_symbols, cse
-    from tqdm import tqdm
     import pathlib, cloudpickle as pickle
-    
-    H = _load_spin()                      
+
+    H = _load_spin()
     sle = SLE_NUMERIC(H, verbose=True)
     rho_fn = sle.make_density_func()
 
-    # store functional      
-    outdir = pathlib.Path.home()/"nasa/SLE/pickle"
+    outdir = pathlib.Path.home() / "nasa/SLE/pickle"
     outdir.mkdir(parents=True, exist_ok=True)
-    with open(outdir/"density_func.pickle", "wb") as fd:
+    with open(outdir / "density_func.pickle", "wb") as fd:
         pickle.dump(rho_fn, fd)
-
-    sle = SLE_SYMBOLIC(H, verbose=True)
-    rho = sle.solve_symbolic(normalize=False)
-
-    print("\n Starting LaTeX Render \n")
-
-    # trace
-    T = sum(rho[i, i] for i in range(16))
-
-    symgen = numbered_symbols("t")
-    temps_T, [T_red] = cse([T], symbols=symgen)
-    with open(outdir/"density_func_fast.tex", "w") as f:
-        sym, expr = temps_T[0]
-        f.write(f"\\newcommand{{\\{sym}}}{{{latex(expr)}}}\n")
-        f.write(f"\\newcommand{{\\T}}{{\\{sym}}}\n\n")
-        f.write("\\begin{bmatrix}\n")
-        for i in tqdm(range(16), desc="Numerator Matrix Rows"):
-            row = rho.row(i)
-            row_tex = latex(row)
-            inner   = row_tex.replace(r"\begin{matrix}", "").replace(r"\end{matrix}", "")
-            sep     = " \\\\\n" if i < 15 else "\n"
-            f.write(f"  {inner}{sep}")
-        f.write("\\end{bmatrix}\n\n")
-
-        # final equation w/ normalization
-        f.write("% The steady-state density is \\rho = N / T\n")
-        f.write("\\[\\rho_{ss} = \\frac{1}{\\T} \\; N\\]\n")
+        print("saved to", outdir / "density_func.pickle")

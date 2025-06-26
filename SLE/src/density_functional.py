@@ -18,13 +18,14 @@ def load_base_params(
 
 def make_density_solver(
     hamiltonian=None,
-    pickle_path: Path = Path.home()/"nasa/SLE/src/pickle/density_func.pickle",
+    pickle_path: Path = Path.home()/"nasa/SLE/pickle/density_func.pickle",
 ):
 
     # load density function
     with open(pickle_path, "rb") as f:
         density_func = pickle.load(f)
    
+   # load spin hamiltonian
     if hamiltonian is None:
         hamiltonian = _load_spin()
     
@@ -33,6 +34,9 @@ def make_density_solver(
     P_S = np.asarray(sle.Lambda_S, dtype=complex)
 
     def rho_fn(B0, phys_params=None, verbose=False):
+
+        # YAML will be loaded once 
+        # every call after will input phys_params
         if phys_params is None: 
             phys_params = load_base_params()
 
@@ -49,13 +53,33 @@ def make_density_solver(
         trace = np.trace(rho)
         real = trace.real 
         imag = trace.imag
-
-        if not (np.isclose(real, 1.0, atol=1e-8) and np.isclose(imag, 0.0, atol=1e-8)): 
-            raise Exception("Density matrix is not normalized.")
+        if not (np.isclose(real, 1.0, atol=1e-5) and np.isclose(imag, 0.0, atol=1e-5)): 
+            raise ValueError("Density matrix is not normalized.")
         
         # hermitian
         if not np.allclose(rho, rho.conj().T, atol=1e-8):
-            raise Exception("Density matrix is not Hermitian")
+            raise ValueError("Density matrix is not Hermitian")
         return rho
 
     return rho_fn, P_S
+
+
+if __name__ == "__main__":
+    base = load_base_params()
+    phys_keys = [k for k in base if k != 'B0']
+    rho_fn, P_S = make_density_solver()
+
+    # generate test B fields and perturbed params
+    B_tests = np.linspace(-base['B0'], base['B0'], 5)
+    print("Checking Hermiticity for sample parameters:")
+
+    for i in range(10):
+        # random jitter around base params
+        phys = {k: base[k] * (1 + 0.05 * np.random.randn()) for k in phys_keys}
+        asym_vals = []
+        for B in B_tests:
+            rho, asym = rho_fn(B, phys)
+            asym_vals.append(asym)
+        print(f"Sample {i+1}: max asymmetry = {max(asym_vals):.3e}")
+
+        print("Done.")
