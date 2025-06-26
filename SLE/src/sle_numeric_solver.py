@@ -6,9 +6,9 @@ logging.basicConfig(level=logging.INFO)
 
 from sympy.physics.quantum import Dagger
 
-__all__ = ["SLE"]
+__all__ = ["SLE_NUMERIC"]
 
-class SLE:
+class SLE_NUMERIC():
     """
     Build the singlet-triplet Liouvillian for a 2-electron + 2-nucleus (I=1/2)
     spin system **numerically**.  The class now returns a ready-to-use callable
@@ -37,7 +37,7 @@ class SLE:
     def __init__(self, H_sym: sp.Matrix, verbose: bool = True) -> None:
         self.verbose = verbose
         self.log = logging.getLogger(__name__)
-        if self.verbose: self.log.info(" Initializing numeric‑first SLE solver …")
+        if self.verbose: self.log.info(" Initializing Numerical SLE solver")
 
         if H_sym.shape != (16, 16):
             raise ValueError("H_sym must be 16 x 16")
@@ -59,7 +59,7 @@ class SLE:
         self.L_super_sym, self.b_vec_sym = self._build_liouvillian()
 
         # lambdify
-        if self.verbose: self.log.info("     * Lambdifying L_super and b_vec …")
+        if self.verbose: self.log.info("     * Lambdifying L_super and b_vec")
         t0 = time.time()
         self.L_func = sp.lambdify(self.sym_list, self.L_super_sym, modules="numpy")
         self.b_func = sp.lambdify(self.sym_list, self.b_vec_sym, modules="numpy")
@@ -87,7 +87,7 @@ class SLE:
             b = np.asarray(bf(*argvals), dtype=np.complex128).ravel()
 
             t0 = time.time()
-            self.log.info(f"     * Numerically solving Rho {b.shape}...")
+            self.log.info(f"     * Numerically solving Rho {b.shape}")
             rho_vec = np.linalg.solve(A, b)
             self.log.info(f"        * done in {time.time() - t0:.4f}s")
 
@@ -121,7 +121,7 @@ class SLE:
         return LS, LT
 
     def _build_liouvillian(self):
-        if self.verbose: self.log.info("     * Building Liouvillian symbolically …")
+        if self.verbose: self.log.info("     * Building Liouvillian symbolically")
         n = 16; I_n = sp.eye(n); kron = sp.kronecker_product
 
         L_H = (-sp.I / self.hbar) * (kron(I_n, self.H_sym) - kron(self.H_sym.T, I_n))                       # type: ignore
@@ -136,31 +136,44 @@ class SLE:
 
 if __name__ == "__main__":
     from utils._load_hamiltonian import _load_spin
-    import pathlib, time 
-    import cloudpickle as pickle 
-
+    from sle_solver import SLE_SYMBOLIC
+    from sympy import latex, Matrix, numbered_symbols, cse
+    from tqdm import tqdm
+    import pathlib, cloudpickle as pickle
+    
     H = _load_spin()                      
-    sle = SLE(H, verbose=True)
+    sle = SLE_NUMERIC(H, verbose=True)
     rho_fn = sle.make_density_func()
-
-    # quick test solve
-    params = {
-        "B0":0.3, "g_e":2.0023, "mu_B":5.788e-5,
-        "g_n1":-1.11, "g_n2":1.40, "mu_N":3.15e-8,
-        "Aa1":4.14e-8, "Aa2":4.14e-8, "Ab1":4.14e-8, "Ab2":4.14e-8,
-        "D1":1e-9, "D2":1e-9, "J":4.1e-8,
-        "k_S":1e5, "k_D":1e6, "p":1e3, "hbar":1.0545718e-34,
-    }
-
-    t0 = time.time()
-    rho_num = rho_fn(**params)
-    dt = time.time()-t0
-
-    print(f"Numeric solve: {dt:4f}s. Trace={np.trace(rho_num).round(2)}")
-    print(rho_num)
 
     # store functional      
     outdir = pathlib.Path.home()/"nasa/SLE/pickle"
     outdir.mkdir(parents=True, exist_ok=True)
     with open(outdir/"density_func.pickle", "wb") as fd:
         pickle.dump(rho_fn, fd)
+
+    sle = SLE_SYMBOLIC(H, verbose=True)
+    rho = sle.solve_symbolic(normalize=False)
+
+    print("\n Starting LaTeX Render \n")
+
+    # trace
+    T = sum(rho[i, i] for i in range(16))
+
+    symgen = numbered_symbols("t")
+    temps_T, [T_red] = cse([T], symbols=symgen)
+    with open(outdir/"density_func_fast.tex", "w") as f:
+        sym, expr = temps_T[0]
+        f.write(f"\\newcommand{{\\{sym}}}{{{latex(expr)}}}\n")
+        f.write(f"\\newcommand{{\\T}}{{\\{sym}}}\n\n")
+        f.write("\\begin{bmatrix}\n")
+        for i in tqdm(range(16), desc="Numerator Matrix Rows"):
+            row = rho.row(i)
+            row_tex = latex(row)
+            inner   = row_tex.replace(r"\begin{matrix}", "").replace(r"\end{matrix}", "")
+            sep     = " \\\\\n" if i < 15 else "\n"
+            f.write(f"  {inner}{sep}")
+        f.write("\\end{bmatrix}\n\n")
+
+        # final equation w/ normalization
+        f.write("% The steady-state density is \\rho = N / T\n")
+        f.write("\\[\\rho_{ss} = \\frac{1}{\\T} \\; N\\]\n")

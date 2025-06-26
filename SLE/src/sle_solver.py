@@ -8,11 +8,11 @@ import logging, time
 logging.basicConfig(level=logging.INFO)
 
 from sympy.physics.quantum import Dagger 
-from SLE.src.utils._load_hamiltonian import _load_spin
+from utils._load_hamiltonian import _load_spin
 
-__all__ = ["SLE"]
+__all__ = ["SLE_SYMBOLIC"]
 
-class SLE():
+class SLE_SYMBOLIC():
     """
     Builds the singlet-triplet Liouvillian for a 2-electron + 2-nuclei (I = 1/2)
     spin system and solves the steady-state stochastic Liouville equation (SLE). 
@@ -46,12 +46,12 @@ class SLE():
         """
         self.verbose = verbose 
         self.logger = logging.getLogger(__name__)
-        self.logger.info(" Initializing SLE Solver...")
+        self.logger.info(" Initializing Symbolic SLE Solver")
 
         if H_sym.shape != (16, 16):
             raise ValueError("H_sym must be 16 x 16")
         else: 
-            self.logger.info(f"     * Input Hamiltonian Shape: {H_sym.shape}")
+            self.logger.info(f"     * Hamiltonian Shape: {H_sym.shape}")
         self.H = H_sym
 
         # symbolic constants in SLE 
@@ -94,7 +94,7 @@ class SLE():
              * done -- numerically. 
         """
 
-        if self.verbose: self.logger.info("     * Starting LU Decomposition for rho...")
+        if self.verbose: self.logger.info("     * Starting LU Decomposition for rho")
         t0 = time.time()
         r_vec = self._L_super.LUsolve(self._b_vec)  # vec(rho)
         if self.verbose: 
@@ -105,6 +105,8 @@ class SLE():
         rho = sp.Matrix(r_vec).reshape(16, 16)      # reshapes 256 x 1 back into 16 x 16
         if self.verbose: self.logger.info(f"         * Unreduced Density Matrix: {rho.shape}")
 
+        # not feasible symbolicaly. 
+        # recommended setting normalize=False and normalizing numerically. 
         if normalize:
             rho /= sp.trace(rho)
         return rho
@@ -116,7 +118,7 @@ class SLE():
         Example: 
             >>> L = SLE(H_sym)
             >>> f = L.lambdify()
-            >>> rho_numeric = f(B0=0.345, g_e=2.0023, ... , k_S=1e5, k_D=1e6, p=1e3)
+            >>> rho_numeric = f(B0=0.345, g_e=2.0023,  , k_S=1e5, k_D=1e6, p=1e3)
 
         """
 
@@ -131,7 +133,7 @@ class SLE():
         all_names   = ham_symbols + sle_symbols
         free_syms = [sp.Symbol(name)    for name in all_names]        
 
-        if self.verbose: self.logger.info("     * Lambdifying Density Matrix...")
+        if self.verbose: self.logger.info("     * Lambdifying Density Matrix")
 
         t0 = time.time()
 
@@ -180,7 +182,7 @@ class SLE():
         Return (L_super, b_vec) where L_super is 256 x 256 and b_vec 256 x 1.
 
         """
-        self.logger.info("     * Building the Full Liouvillian Superoperator...")
+        self.logger.info("     * Building Liovillian symbolically")
 
         n = 16
         I_n = sp.eye(n)
@@ -218,7 +220,7 @@ if __name__ == "__main__":
     from pathlib import Path
 
     spin_hamiltonian = _load_spin() 
-    L = SLE(spin_hamiltonian)
+    L = SLE_SYMBOLIC(spin_hamiltonian)
     f = L.lambdify()
 
     pickle_dir = Path.home() / "nasa/SLE/" / "pickle/"
