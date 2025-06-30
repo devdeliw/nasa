@@ -1,0 +1,8 @@
+\contentsline {section}{\numberline {1}The Zeeman Effect}{2}{}%
+\contentsline {section}{\numberline {2}Hyperfine Interaction}{3}{}%
+\contentsline {subsection}{\numberline {2.1}Vector Potential $\vec {A}$}{3}{}%
+\contentsline {subsection}{\numberline {2.2}Current density $\vec {J}$}{3}{}%
+\contentsline {subsection}{\numberline {2.3}Hamiltonian Density}{3}{}%
+\contentsline {section}{\numberline {3}Zero-Field Splitting}{5}{}%
+\contentsline {section}{\numberline {4}Exchange Interaction}{9}{}%
+\contentsline {section}{\numberline {5}Putting it all together}{12}{}%

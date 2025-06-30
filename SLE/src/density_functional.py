@@ -76,10 +76,9 @@ if __name__ == "__main__":
     for i in range(10):
         # random jitter around base params
         phys = {k: base[k] * (1 + 0.05 * np.random.randn()) for k in phys_keys}
-        asym_vals = []
         for B in B_tests:
-            rho, asym = rho_fn(B, phys)
-            asym_vals.append(asym)
-        print(f"Sample {i+1}: max asymmetry = {max(asym_vals):.3e}")
+            rho = rho_fn(B, phys)
+
+            print(np.allclose(rho, rho.conjugate().T))
 
         print("Done.")
