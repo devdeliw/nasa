@@ -1,21 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Callable, Sequence, Mapping
 
 import numpy as np
 import emcee, multiprocessing
+import matplotlib.pyplot as plt
 from multiprocessing.dummy import Pool as ThreadPool
 
 import logging
 logging.basicConfig(level=logging.INFO)
-
-Array = np.ndarray
-
-
-# -----------------------------------------------------------------------------
-# Helper: default Jeffreys prior on noise
-# -----------------------------------------------------------------------------
 
 def _jeffreys_prior_sigma(sigma: float, low: float = 1e-4, high: float = 10.0) -> float:
     if sigma <= low or sigma >= high:
@@ -24,7 +19,7 @@ def _jeffreys_prior_sigma(sigma: float, low: float = 1e-4, high: float = 10.0) -
 
 
 @dataclass
-class EDMRDerivativeMCMC():
+class EDMR_MCMC():
     """
     MCMC fit of EDMR/NZFMR spectra. 
 
@@ -58,30 +53,29 @@ class EDMRDerivativeMCMC():
     samples     : np.ndarray| None = None
     log_prob    : np.ndarray | None = None
     _map        : np.ndarray | None = None
+    logger = logging.getLogger(__name__)
 
-
-    def _model_derivative(self, theta: Sequence[float]) -> Array:
+    def _model_derivative(self, theta: Sequence[float]) -> np.ndarray:
         """
         Compute model dI/dB at the stored `B_data` points.
         
         """
-        A, I0, *phys, _ = theta
+        logA, I0, *phys, _ = theta
+        A = np.exp(logA)
         phys_dict = dict(zip(self.phys_keys, phys))
         sing = self.singlet_fn(self.B_data, **phys_dict) # type: ignore
-        dIdB = np.gradient(sing, self.dB or np.diff(self.B_data).mean())
+        dIdB = np.gradient(sing, self.B_data)
         return A * dIdB + I0
 
     def log_prior(self, theta: Sequence[float]) -> float:
-        A, I0, *rest = theta
-        sigma = rest[-1]
+        logA, I0, *rest = theta
+        log_sigma = rest[-1]
+        sigma = np.exp(log_sigma)
         phys = rest[:-1]
 
         Imin, Imax = self.I_data.min(), self.I_data.max()
 
-        # amplitude > 0 and not crazy large
-        if not (0 < A < 5 * (Imax - Imin)):
-            return -np.inf
-        # offset near data mean
+        lp_logA = -0.5 * (logA / 4.0) ** 2         
         if not (Imin - abs(Imin) < I0 < Imax + abs(Imax)):
             return -np.inf
 
@@ -93,11 +87,12 @@ class EDMRDerivativeMCMC():
                 return -np.inf
 
         # jeffreys on sigma
-        lp = _jeffreys_prior_sigma(sigma)
-        return lp
+        lp_sigma = _jeffreys_prior_sigma(sigma)
+        return lp_logA + lp_sigma
 
     def log_likelihood(self, theta: Sequence[float]) -> float:
-        sigma = theta[-1]
+        log_sigma = theta[-1]
+        sigma = np.exp(log_sigma)
         model = self._model_derivative(theta)
         resid = self.I_data - model
         return -0.5 * np.sum((resid / sigma) ** 2 + np.log(2 * np.pi * sigma ** 2))
@@ -108,18 +103,41 @@ class EDMRDerivativeMCMC():
             return -np.inf
         return lp + self.log_likelihood(theta)
 
-    def _init_walkers(self, nwalkers: int | None = None) -> Array:
-        ndim = 3 + len(self.phys_keys)  # A, I0, phys..., sigma
+    def _init_walkers(self, nwalkers: int | None = None) -> np.ndarray:
+        ndim = 3 + len(self.phys_keys)
         if nwalkers is None:
             nwalkers = 4 * ndim
-        theta0 = np.hstack([
-            (self.I_data.max() - self.I_data.min()) / 2,  # A
-            np.median(self.I_data),                      # I0
-            [self.base_phys[k] for k in self.phys_keys], # phys params
-            [self.sigma0],                               # sigma
-        ])
-        jitter = 1e-2
-        return theta0 * (1 + jitter * np.random.randn(nwalkers, ndim))
+
+        self.logger.info(" Precomputing baseline derivative spectra. ~10min.")
+        dS0 = np.gradient(self.singlet_fn(self.B_data, **self.base_phys), self.B_data) # type: ignore
+        init_logA  = np.log(self.I_data.ptp() / dS0.ptp())
+        init_I0    = np.median(self.I_data)
+        init_phys  = [self.base_phys[k] for k in self.phys_keys]
+        init_logs  = np.log(self.sigma0)
+
+        theta0 = np.array([
+            init_logA,
+            init_I0,
+            *init_phys,
+            init_logs
+        ])  
+
+        pos = np.tile(theta0, (nwalkers, 1))
+
+        jitter_logA   = 0.2
+        jitter_logsig = 0.2
+        pos[:, 0]    += jitter_logA   * np.random.randn(nwalkers)
+        pos[:, -1]   += jitter_logsig * np.random.randn(nwalkers)
+
+        jitter_I0     = 0.1
+        pos[:, 1]    += jitter_I0 * init_I0 * np.random.randn(nwalkers)
+
+        jitter_phys   = 0.1
+        for i in range(len(self.phys_keys)):
+            p0 = init_phys[i]
+            pos[:, 2 + i] = p0 * (1 + jitter_phys * np.random.randn(nwalkers))
+
+        return pos
 
     def run_mcmc(
         self,
@@ -135,7 +153,12 @@ class EDMRDerivativeMCMC():
 
         threads = threads or multiprocessing.cpu_count()
         pool = ThreadPool(threads)
-        logging.info(f"Launching emcee: {nwalkers=}, {nsteps=} (burn {burn}), {threads} threads.")
+        print("")
+        self.logger.info(f" Launching emcee:")
+        self.logger.info(f"     # walkers {nwalkers:>5}")
+        self.logger.info(f"     # steps   {nsteps:>5}") 
+        self.logger.info(f"     # burn    {burn:>5}") 
+        self.logger.info(f"     # threads {threads:>5}")
 
         sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_posterior, pool=pool)
         sampler.run_mcmc(pos, nsteps, progress=progress)
@@ -147,7 +170,7 @@ class EDMRDerivativeMCMC():
         self.log_prob = sampler.get_log_prob(discard=burn, flat=True)
         return self.samples # type: ignore
 
-    def get_map(self) -> Array:
+    def get_map(self) -> np.ndarray:
         if self._map is not None:
             return self._map
         if self.samples is None or self.log_prob is None:
@@ -156,13 +179,114 @@ class EDMRDerivativeMCMC():
         return self._map    # type: ignore
 
     def summary(self):
-        if self.samples is None:
-            raise RuntimeError("run_mcmc first")
-        names = ["A", "I0"] + list(self.phys_keys) + ["sigma"]
-        m, s = self.samples.mean(0), self.samples.std(0)
-        for n, mi, si in zip(names, m, s):
-            logging.info(f"{n:<6}: {mi:>10.4g} ± {si:>9.4g}")
+        """
+        Print the MAP (maximum a posteriori) parameter values,
+        converting logA and log_sigma back into linear space.
 
-    def plot_best_fit(self, bmin=-40, bmax=40, n_points=200, derivative=True, outdir=None, save=False):
-        from run_solver import plot_sing_population
-        from pathlib import Path
+        """
+        theta_map = self.get_map()
+
+        names = ["A", "I0"] + list(self.phys_keys) + ["sigma"]
+        vals = theta_map.copy()
+
+        vals[0]  = np.exp(vals[0])  # A in linear units
+        vals[-1] = np.exp(vals[-1]) # sigma in linear units
+        print("")
+        self.logger.info(" Calculated best-fit parameters:")
+        for name, val in zip(names, vals):
+            self.logger.info(f" * {name:<6}: {val:>10.4g}")
+        print("")
+
+    def plot_best_fit(
+        self,
+        bmin    : float = -40,
+        bmax    : float = +40,
+        n_points: int = 200,
+        *,
+        derivative  : bool = True,
+        outdir      : Path | None = Path.home() / "nasa/SLE/main/media",
+        save        : bool = True,
+        full        : bool = True, 
+    ):
+        """
+        Plot the MAP-parameter model against the experimental spectrum.
+
+        Args: 
+            * bmin, bmax, n_points
+                * range and density of the model curve.
+            * derivative
+                * ff True (default) plot dI/dB; if False plot the underlying current I.
+                * Note: `self.I_data` is already a derivative spectrum. 
+            * outdir
+                * destination folder for pngs (`~/nasa/SLE/main/media` by default).
+            * save
+                * save pngs
+            * full
+                * overrides b sweep range, just matching the min max bounds of raw data. 
+
+        Returns the figure(s) created. 
+
+        """
+
+        if self.B_data is None or self.I_data is None:
+            raise RuntimeError("EDMR_MCMC: no data loaded.")
+
+        theta_map = self.get_map()
+        logA, I0, *phys_vals, _ = theta_map
+        A = np.exp(logA)
+        phys_dict = dict(zip(self.phys_keys, phys_vals))
+
+        if full: 
+            bmin = self.B_data.min() 
+            bmax = self.B_data.max()
+        B_dense = np.linspace(bmin, bmax, n_points)
+        sing_dense = self.singlet_fn(B_dense, **phys_dict)  # type: ignore
+
+        if derivative:
+            model_dense = A * np.gradient(sing_dense, B_dense) + I0
+            y_label = r"$\mathrm{d}I/\mathrm{d}B$  (arb.)"
+            title   = "Best-fit EDMR derivative"
+            fname   = "best_fit_derivative.png"
+        else:
+            model_dense = A * sing_dense + I0
+            y_label = r"$I$  (arb.)"
+            title   = "Best-fit current (integrated)"
+            fname   = "best_fit_current.png"
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+
+        ax.scatter(
+            self.B_data, self.I_data,
+            s=5, c="k", marker="+", label="experimental"
+        )
+
+        sort_idx = np.argsort(B_dense)
+        ax.plot(
+            B_dense[sort_idx], model_dense[sort_idx],
+            lw=2, c="r", label="best fit"
+        )
+
+        ax.axvline(0.0, ls=":", color="grey")
+        ax.set_xlabel("B [G]", fontsize=14)
+        ax.set_ylabel(y_label, fontsize=14)
+        ax.set_title(title, fontsize=18)
+        ax.legend()
+
+        # residual 
+        resid_dense = np.interp(self.B_data, B_dense, model_dense) - self.I_data
+        fig2, ax2 = plt.subplots(figsize=(10, 2.5))
+        ax2.scatter(self.B_data, resid_dense, s=8, marker="+")
+        ax2.axhline(0.0, color="grey", lw=1)
+        ax2.set_xlabel("B [G]", fontsize=12)
+        ax2.set_ylabel("Residual", fontsize=12)
+        ax2.set_title("Residual Plot", fontsize=14)
+
+        if save:
+            outdir = Path(outdir or Path.home() / "nasa/SLE/main/media")
+            outdir.mkdir(parents=True, exist_ok=True)
+            fig.savefig(outdir / fname, dpi=300, bbox_inches="tight")
+            fig2.savefig(outdir / ("residual_" + fname), dpi=300, bbox_inches="tight")
+            plt.close(fig); plt.close(fig2)
+
+        return fig, fig2
+

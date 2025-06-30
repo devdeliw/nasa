@@ -5,12 +5,10 @@ import matplotlib.pyplot as plt
 
 from tqdm import tqdm   
 from pathlib import Path 
-from ruamel.yaml import YAML
-from sle_solver import SteadyStateSLESolver 
+from sle_solver import SteadyStateSLESolver
 
-# symbolic spin hamiltonian 
-with open(Path.home() / "nasa/hamiltonian/pickle/spin_hamiltonian.pickle", "rb") as f: 
-    H_sym = pickle.load(f) 
+import logging 
+logging.basicConfig(level = logging.INFO) 
 
 def load_params(
         param_file: Path = Path.home() / "nasa/SLE/main/utils/params.yaml"
@@ -21,7 +19,6 @@ def load_params(
     """
     from ruamel.yaml import YAML 
 
-    yml = YAML() 
     with open(param_file) as f: 
         raw = YAML().load(f) 
     
@@ -161,17 +158,23 @@ def plot_sing_population(
             fig2.savefig(fname, dpi=300) # type: ignore 
     plt.close()
 
-# initialize solver 
-hamiltonian_params, k_s, k_d, p, hbar, _ = load_params() 
-Lambda_S, Lambda_T = projection_operators() 
-solver = SteadyStateSLESolver( 
-    H_sym       = H_sym, 
-    Lambda_S    = sp.Matrix(Lambda_S), 
-    Lambda_T    = sp.Matrix(Lambda_T), 
-    Gamma       = sp.Matrix(2 * np.eye(Lambda_S.shape[0])),
-    hbar        = hbar,
-)
+if __name__ == "__main__": 
 
-# plot singlet pop and derivative lineshapes
-plot_sing_population(bmin=-100, bmax=+100, n_points=200, derivative=True)
-    
+    # symbolic spin hamiltonian 
+    with open(Path.home() / "nasa/hamiltonian/pickle/spin_hamiltonian.pickle", "rb") as f: 
+        H_sym = pickle.load(f) 
+
+    # initialize solver
+    hamiltonian_params, k_s, k_d, p, hbar, _ = load_params() 
+    Lambda_S, Lambda_T = projection_operators() 
+    solver = SteadyStateSLESolver( 
+        H_sym       = H_sym, 
+        Lambda_S    = sp.Matrix(Lambda_S), 
+        Lambda_T    = sp.Matrix(Lambda_T), 
+        Gamma       = sp.Matrix(2 * np.eye(Lambda_S.shape[0])),
+        hbar        = hbar,
+    )
+
+    # plot singlet pop and derivative lineshapes
+    plot_sing_population(bmin=-200, bmax=+200, n_points=200, derivative=True)
+        

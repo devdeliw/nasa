@@ -5,21 +5,19 @@ import pickle
 import numpy as np
 import pandas as pd
 import sympy as sp
-import matplotlib.pyplot as plt
 
 from pathlib import Path
-from ruamel.yaml import YAML
 
 from sle_solver import SteadyStateSLESolver
 from run_solver import make_singlet_fn, load_params, projection_operators
-from mcmc import EDMRDerivativeMCMC
+from mcmc import EDMR_MCMC
 
 DEFAULT_PARAMFILE = Path.home() / "nasa/SLE/main/utils/params.yaml"
 DEFAULT_HAM       = Path.home() / "nasa/hamiltonian/pickle/spin_hamiltonian.pickle"
 DEFAULT_OUTDIR    = Path.home() / "nasa/SLE/main/media/EDMR/"
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("__name__")
+logger = logging.getLogger(__name__)
 
 def fit_edmr(
     df: pd.DataFrame,
@@ -27,7 +25,7 @@ def fit_edmr(
     paramfile           : Path = DEFAULT_PARAMFILE,
     hamiltonian_pickle  : Path = DEFAULT_HAM,
     outdir              : Path = DEFAULT_OUTDIR,
-    nsteps              : int = 2000,
+    nsteps              : int = 10000,
     burn                : int = 1000,
     sigma0              : float = 1e-3,
     progress            : bool = True,
@@ -48,6 +46,14 @@ def fit_edmr(
     * progress : bool
         * show tqdm progress bar.
     """
+   
+    home = Path.home()
+    rel_param = paramfile.relative_to(home)
+    rel_ham   = hamiltonian_pickle.relative_to(home)
+    logger.info(f" Initializing MCMC algorithm.")
+    logger.info(f"     * parameter file: ~/{rel_param}") 
+    logger.info(f"     * hamiltonian file: ~/{rel_ham}")
+
     outdir.mkdir(parents=True, exist_ok=True)
 
     B_exp = df["B (Gauss)"].to_numpy()
@@ -58,6 +64,8 @@ def fit_edmr(
 
     with hamiltonian_pickle.open("rb") as f:
         H_sym = pickle.load(f)
+
+    logger.info(f"     * rendered SLE solver\n")
 
     solver = SteadyStateSLESolver(
         H_sym=H_sym,
@@ -70,7 +78,8 @@ def fit_edmr(
     singlet_fn = make_singlet_fn(solver, Lambda_S, k_s=ks, k_d=kd, p=p)
 
     # run mcmc
-    mcmc = EDMRDerivativeMCMC(
+    logger.info(f" Starting MCMC")
+    mcmc = EDMR_MCMC(
         B_data=B_exp,
         I_data=I_exp,
         singlet_fn=singlet_fn, # type: ignore
@@ -80,6 +89,8 @@ def fit_edmr(
     )
     mcmc.run_mcmc(nsteps=nsteps, burn=burn, progress=progress)
     mcmc.summary()
+
+    mcmc.plot_best_fit()
 
 
 if __name__ == "__main__":
