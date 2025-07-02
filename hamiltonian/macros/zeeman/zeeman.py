@@ -80,5 +80,24 @@ with open(fname, "wb") as f:
     pickle.dump(H_Z, f)
     print(f"Zeeman Hamiltonian saved to {fname}.")
 
+# ordering: |1,+1>, |1,0>, |0,0>, |1,−1>
+S_plus = sp.zeros(4)
+idx = {(1,+1):0,(1,0):1,(0,0):2,(1,-1):3}
+for (s,m), i in idx.items():
+    if m < s:
+        j = idx[(s,m+1)]
+        S_plus[j,i] = sp.sqrt(s*(s+1) - m*(m+1))
+S_minus = S_plus.T
+Sx_e = (S_plus + S_minus)/2
+Sz_e = sp.diag(+1, 0, 0, -1)           # eigen-m values
+
+# lift to 16×16 (electron ⊗ nuclear identity)
+I4 = sp.eye(4)
+Sx_tot = sp.kronecker_product(Sx_e, I4)
+Sz_tot = sp.kronecker_product(Sz_e, I4)
+
+c_B = sp.simplify(sp.trace(H_Z*Sz_tot) / sp.trace(Sz_tot*Sz_tot))
+print("Detuning term c(B0) =", c_B)   
+
 
  
