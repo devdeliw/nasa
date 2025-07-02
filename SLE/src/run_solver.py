@@ -52,7 +52,10 @@ def load_params(
     f_mod = float(raw["lockin"]["f_mod"])  # unused
     B_mod = float(raw["lockin"]["B_mod"])
 
-    return hamiltonian_params, k_s, k_d, p_gen, B_mod
+    A  = float(raw["proportion"]["A"])
+    I0 = float(raw["proportion"]["I0"])
+
+    return A, I0, hamiltonian_params, k_s, k_d, p_gen, B_mod
 
 # constant to maintain parameteter ordering
 P_ORDER = [
@@ -73,7 +76,7 @@ P_ORDER = [
 
 def make_pvec(params: dict[str, float], k_s: float, k_d: float, p: float, B_mod: float) -> np.ndarray:
     """
-    Packs the 17-element parameter vector expected by `edmr_spectra`.
+    Packs the 17-element parameter vector expected by `singlet_spectra`.
     
     """
 
@@ -84,6 +87,21 @@ def make_pvec(params: dict[str, float], k_s: float, k_d: float, p: float, B_mod:
 
     core.extend([k_s, k_d, p, B_mod])
     return np.asarray(core, dtype=float)
+
+def make_fullpvec(params: dict[str, float], k_s: float, k_d: float, p: float, B_mod: float, A: float, I0: float) -> np.ndarray: 
+    """
+    Packs the 19-element parameter vector expected by `edmr_spectra`. 
+
+    """
+    full = [A, I0]
+    try:
+        core = [params[k] if k != "B0" else 0.0 for k in P_ORDER]  # order properly
+    except KeyError as miss:
+        raise KeyError(f"missing {miss!s} in params.yaml") from miss
+    full.extend(core)
+    full.extend([k_s, k_d, p, B_mod])
+    return np.asarray(full, dtype=float)
+
 
 def plot_singlet_spectrum(
     bmin: float,
@@ -131,7 +149,7 @@ def plot_singlet_spectrum(
 
 
 if __name__ == "__main__":
-    hamiltonian_params, k_s, k_d, p_gen, B_mod = load_params()
+    _, _, hamiltonian_params, k_s, k_d, p_gen, B_mod = load_params()
     pvec = make_pvec(
         params=hamiltonian_params, 
         k_s=k_s, 

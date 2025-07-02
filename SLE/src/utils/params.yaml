@@ -16,7 +16,7 @@ zeeman:
   mu_N: 3.1524512e-12         # [eV/G]
 
 zfs:
-  D1: 1e-9                    # [eV]
+  D1: 3.4e-9                    # [eV]
   D2: 1e-12                   # [eV]
 
 microwave:
@@ -34,4 +34,8 @@ sle:
 
 lockin: 
   f_mod: 1e3                  # [Hz]
-  B_mod: 2                    # [G pp]
+  B_mod: 4                    # [G pp]
+
+proportion: 
+  A: 0.5e6
+  I0: 0

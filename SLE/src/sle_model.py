@@ -172,13 +172,13 @@ def singlet_spectra(
     N = len(B_array)
     i_rel = np.empty(N, dtype=float)
 
-    idx_blocks = np.array_split(np.arange(N), n_jobs*4)       # type: ignore 
-    args = []                                                 # 4 blocks per core
+    idx_blocks = np.array_split(np.arange(N), n_jobs*8)             # type: ignore 
+    args = []                                                       # 8 blocks per core
     for indices in idx_blocks:
         B_block = B_array[indices]
         args.append((indices, B_block, pvec, subs_str))
 
-    if n_jobs > 1:                                          # type: ignore
+    if n_jobs > 1:                                                  # type: ignore
         with ProcessPoolExecutor(max_workers=n_jobs) as ex:
             futures = [ex.submit(_compute_block, arg) for arg in args]
             with tqdm.tqdm(total=len(futures)) as pbar:
@@ -196,7 +196,10 @@ def singlet_spectra(
         return gaussian_filter1d(dI, sigma=sig, mode='nearest')
     return dI
 
-def edmr_spectra(B_array: np.ndarray, pvec: np.ndarray, modulate: bool = True, n_jobs: int = 1) -> np.ndarray:
+def edmr_spectra(
+        B_array: np.ndarray, pvec: np.ndarray, modulate: bool = True, 
+        n_jobs = psutil.cpu_count(logical=False)
+) -> np.ndarray:
     """
     EDMR spectra is directly proportional to the singlet population. Hence, 
     this function just returns 
