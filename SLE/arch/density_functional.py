@@ -20,7 +20,6 @@ def make_density_solver(
     hamiltonian=None,
     pickle_path: Path = Path.home()/"nasa/SLE/pickle/density_func.pickle",
 ):
-
     # load density function
     with open(pickle_path, "rb") as f:
         density_func = pickle.load(f)
