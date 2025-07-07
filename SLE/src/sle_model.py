@@ -125,7 +125,7 @@ def _compute_block(args):
 
 def singlet_spectra(
         B_array: np.ndarray, pvec: np.ndarray, modulate: bool=True, 
-        n_jobs = psutil.cpu_count(logical = False)
+        n_jobs = psutil.cpu_count(logical = False), show_progress: bool =True
 ) -> np.ndarray:
     """
     Args: 
@@ -181,7 +181,7 @@ def singlet_spectra(
     if n_jobs > 1:                                                  # type: ignore
         with ProcessPoolExecutor(max_workers=n_jobs) as ex:
             futures = [ex.submit(_compute_block, arg) for arg in args]
-            with tqdm.tqdm(total=len(futures)) as pbar:
+            with tqdm.tqdm(total=len(futures), disable=not show_progress) as pbar:
                 for fut in as_completed(futures):
                     indices, i_block = fut.result()
                     i_rel[indices] = i_block
@@ -198,7 +198,7 @@ def singlet_spectra(
 
 def edmr_spectra(
         B_array: np.ndarray, pvec: np.ndarray, modulate: bool = True, 
-        n_jobs = psutil.cpu_count(logical=False)
+        n_jobs = psutil.cpu_count(logical=False), show_progress: bool = True,
 ) -> np.ndarray:
     """
     EDMR spectra is directly proportional to the singlet population. Hence, 
@@ -228,5 +228,11 @@ def edmr_spectra(
             * d(singlet pop)/dB array (same length as B_array)
     """
     singlet_vec = pvec[2:]
-    dI = singlet_spectra(B_array=B_array, pvec=singlet_vec, modulate=modulate, n_jobs=n_jobs)
+    dI = singlet_spectra(
+        B_array=B_array, 
+        pvec=singlet_vec, 
+        modulate=modulate, 
+        n_jobs=n_jobs, 
+        show_progress=show_progress
+    )
     return pvec[0] * dI + pvec[1]

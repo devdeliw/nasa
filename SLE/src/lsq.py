@@ -8,11 +8,9 @@ from utils.bounds import lower, upper
 from sle_model import edmr_spectra
 from run_solver import load_params, make_fullpvec
 
-
 import logging, psutil
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 class EDMRLSQ:
     """
@@ -42,7 +40,7 @@ class EDMRLSQ:
         *  The result of least_squares after fitting.
     """
 
-    def __init__(self, B_array, I_array, p0, lower, upper, edmr_func, n_points_per=None, n_jobs=None):
+    def __init__(self, B_array, I_array, p0, lower, upper, edmr_func, n_points_per=None, n_jobs=None, show_progress=True, verbose=True):
         self._p0_full = np.asarray(p0, dtype=float)
         self._lower_full = np.asarray(lower, dtype=float)
         self._upper_full = np.asarray(upper, dtype=float)
@@ -64,6 +62,8 @@ class EDMRLSQ:
         self.B = np.asarray(B_array, dtype=float)
         self.I = np.asarray(I_array, dtype=float)
         self.edmr = edmr_func
+        self._show_progress = show_progress
+        self._verbose = verbose
 
         self.n_points_per = n_points_per if n_points_per else 85
         self.n_jobs = n_jobs if n_jobs else psutil.cpu_count(logical=False)
@@ -100,7 +100,7 @@ class EDMRLSQ:
         p[self._log_idx_nl] = 10 ** p[self._log_idx_nl]
         return p
 
-    def _residuals(self, p_nl, alpha=10):
+    def _residuals(self, p_nl, alpha=1, save_pickle=True):
         self._nfev += 1
         iter_no = (self._nfev - 1) // self._calls_per_iter + 1
 
@@ -111,7 +111,7 @@ class EDMRLSQ:
 
         p_lin = self._from_log(p_nl)
         dummy_full = self._build_full_pvec(p_lin, 1.0, 0.0)
-        S_coarse = self.edmr(B_coarse, dummy_full, modulate=True, n_jobs=self.n_jobs)
+        S_coarse = self.edmr(B_coarse, dummy_full, modulate=True, n_jobs=self.n_jobs, show_progress=self._show_progress)
 
         spline = interp1d(B_coarse, S_coarse, kind="cubic", assume_sorted=True)
         S_pred = spline(self.B)
@@ -123,20 +123,23 @@ class EDMRLSQ:
         w = (w / w.max()) ** alpha
 
         if (self._nfev - 1) % self._calls_per_iter == 0:
-            with open(self._pkl_file, "wb") as f:
-                pickle.dump(p_lin, f)
-                logger.info(" Saved pickle file. ")
+            if save_pickle: 
+                with open(self._pkl_file, "wb") as f:
+                    pickle.dump(p_lin, f)
+                    logger.info(" Saved pickle file. ")
             latest_full = self._build_full_pvec(p_lin, A_opt, I0_opt)
-            print("")
-            logger.info(" Iteration %d ", iter_no)
-            for name, val in zip(self.param_names, latest_full):
-                logging.info(f" * {name:<6} = {val:.3e}")
-            print("")
+
+            if self._verbose:
+                print("")
+                logger.info(" Iteration %d ", iter_no)
+                for name, val in zip(self.param_names, latest_full):
+                    logging.info(f" * {name:<6} = {val:.3e}")
+                print("")
 
         return w * (I_pred - self.I)
 
-    def fit(self, ftol=1e-14, xtol=3e-16, gtol=1e-14, verbose=True):
-    
+    def fit(self, ftol=1e-14, xtol=3e-16, gtol=1e-14):
+
         print("\nInitializing Least Squares Fitting Routine")
         print("==========================================\n")
         print(f"LSQ Arguments: ") 
@@ -152,22 +155,35 @@ class EDMRLSQ:
         )
 
         from utils.bounds import x_scale as _x_scale_full
-        x_scale = _x_scale_full[2:].copy()
-        x_scale[self._log_idx_nl] = 1.0
+        scales_nl = _x_scale_full.copy() 
+        scales_nl[self._log_idx_nl] = 1.0
+
+        x0_nl_norm    = self._p0_nl    / scales_nl
+        lower_nl_norm = self._lower_nl / scales_nl
+        upper_nl_norm = self._upper_nl / scales_nl
+
+        def residuals_norm(x_norm): 
+            p_nl_real = x_norm * scales_nl 
+            return self._residuals(p_nl_real)
 
         self.result = least_squares(
-            fun=self._residuals,
-            x0=self._p0_nl,
-            bounds=(self._lower_nl, self._upper_nl),
+            fun=residuals_norm,
+            x0=x0_nl_norm,
+            bounds=(lower_nl_norm, upper_nl_norm),
             ftol=ftol,
             xtol=xtol,
             gtol=gtol,
-            verbose=2 if verbose else 0,
+            verbose=2 if self._verbose else 0,
             jac='2-point',
             method="trf",
-            x_scale=x_scale # type: ignore
         )
-        return self._from_log(self.result.x)
+
+        x_nl_opt_norm = self.result.x 
+        p_nl_opt_real = x_nl_opt_norm * scales_nl 
+        p_nl_opt      = self._from_log(p_nl_opt_real)
+        self.result.x = p_nl_opt_real 
+
+        return p_nl_opt
 
     @property
     def fitted_params(self):
@@ -254,7 +270,9 @@ def _load_fitter(
     default_params: bool = True, 
     n_jobs=None,
     B_range=None, # (bmin, bmax) if not None, else entire data
-    custom_params=None
+    custom_params=None, 
+    show_progress=True,
+    verbose=True,
 ):
     if not default_params and not custom_params: 
         logger.error(
@@ -289,7 +307,9 @@ def _load_fitter(
         upper=upper, 
         n_points_per=n_points_per, 
         edmr_func=edmr_spectra,
-        n_jobs=n_jobs if n_jobs else None
+        n_jobs=n_jobs if n_jobs else None,
+        show_progress=show_progress,
+        verbose=verbose,
     )
 
 def _update_param_yaml(
@@ -354,7 +374,7 @@ def _update_param_yaml(
 
 if __name__ == "__main__":
 
-    _update_param_yaml()
+    #_update_param_yaml()
 
     fitter = _load_fitter(
         data_path       = Path.home()/"nasa/spectra/src/data/raw/[EDMR]_2G_3V_200MHz.pkl", 
@@ -362,7 +382,7 @@ if __name__ == "__main__":
         default_params  = True, 
         custom_params   = False, 
         n_jobs          = 5, 
-        B_range         = (-50, 50)
+        B_range         = (-50, 50), 
     )
 
     #fitter.fit()
