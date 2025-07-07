@@ -1,112 +1,67 @@
-import numpy as np, time
-from pathlib import Path
-from lsq import _load_fitter, _update_param_yaml
-from run_solver import load_params, make_pvec
+import numpy as np
 
-def main(n_search: int = 30, sleep_every=20, sleep_time=120): 
-    """
-    Runs coordinate search to find near-optimal parameters 
-    for the least squares initial guess. 
+# lower bounds
+lower = np.array([
+    1e4,           # A ≥ 0 (scale factor)
+    -1e4,          # I0 offset (can be negative, similar magnitude to A)
+    0.0,           # J ≥ 0  (exchange, ≲ 1µeV)
+    5.85e-8,         # Aa1 ∈ [−1µeV, +1µeV]
+    2.04e-7,         # Ab1
+    4.5e-8,         # Aa2
+    1e-7,         # Ab2
+    1.5e-8,           # D1 ≥ 0 (ZFS, ≲100 neV)
+    0.0,           # D2 ≥ 0 (ZFS, ≲1 neV)
+    -10.0,         # dummy
+    2.001,         # g_e ∈ [2.001, 2.004]
+    -1.12,         # g_n1 ∈ [−1.5, −0.5]
+    1.39,          # g_n2 ∈ [1.2, 1.6]
+    1.995e8,           # nu ∈ [190 MHz, 210 MHz]
+    1e3,           # omega1 ∈ [1 kHz, 10 MHz]
+    1e3,           # k_S ∈ [1 kHz, 10 MHz]
+    1e4,           # k_D ∈ [10 kHz, 100 MHz]
+    1e2,           # p ∈ [10, 1e5]
+    2,             # B_mod ∈ [0.1 G, 10 G]
+], dtype=float)
 
-    Args: 
-        * n_search: int
-            * # steps between the lower and upper bound =
-            * of a parameter to measure cost.
-    """
+# upper bounds
+upper = np.array([
+    1e6,           # A 
+    1e4,           # I0
+    1e-6,          # J
+    5.93e-8,        # Aa1
+    2.065e-7,          # Ab1
+    5e-8,          # Aa2
+    1.01e-7,          # Ab2
+    1.7e-8,          # D1
+    1e-9,          # D2
+    10.0,          # B0 dummy
+    2.004,         # g_e
+    -1.09,         # g_n1
+    1.41,          # g_n2
+    2.005e8,       # nu
+    1e7,           # omega1
+    1e7,           # k_S
+    1e8,           # k_D
+    1e5,           # p
+    5,             # B_mod
+], dtype=float)
 
-    fitter = _load_fitter(
-        data_path       = Path.home()/"nasa/spectra/src/data/raw/[EDMR]_2G_3V_200MHz.pkl", 
-        n_points_per    = 50, 
-        default_params  = True, 
-        custom_params   = False, 
-        n_jobs          = 5, 
-        B_range         = (-50, 50),
-        show_progress   = False,
-        verbose         = False
-    )
-
-    p_best = fitter._p0_nl.copy() 
-    lower_nl = fitter._lower_nl 
-    upper_nl = fitter._upper_nl 
-
-    sweep_map = { 
-        "Aa1"   : 1, 
-        "Ab1"   : 2, 
-        "Aa2"   : 3, 
-        "Ab2"   : 4, 
-        "D1"    : 5, 
-        "J"     : 0, 
-        "k_S"   : 13, 
-        "k_D"   : 14, 
-        "p"     : 15 
-    }
-
-    num_iterations = 0
-    def cost(p_nl): 
-        nonlocal num_iterations 
-        num_iterations += 1
-        r = fitter._residuals(p_nl, save_pickle=False)
-        return np.sum(r*r)
-
-    print("\nSTARTING COORDINATE SEARCH:")
-    print("===========================\n")
-
-    for name, idx in sweep_map.items():     
-        print(name)
-        print('‾'*len(name))
-
-        lo, hi = lower_nl[idx], upper_nl[idx]
-        grid = np.linspace(lo, hi, n_search)
-
-        best_val = p_best[idx]
-        best_cost = cost(p_best)
-        print(f"Present Value: {best_val:3e}")
-        print(f"Present Cost : {best_cost:3e}")
-
-        w_iter, w_val, w_cost, w_diff, w_better = 6, 12, 12, 15, 7
-        header = f"{'Iter':^{w_iter}} | {'Value':^{w_val}} | {'Cost':^{w_cost}} | {'δCost':^{w_diff}} | {'Better':^{w_better}}"
-        print(header)
-        print("‾" * len(header))
-
-        for num, trial in enumerate(grid): 
-
-            if sleep_every and sleep_time and num_iterations and num_iterations % sleep_every == 0: 
-                time.sleep(sleep_time)
-
-            p_test = p_best.copy() 
-            p_test[idx] = trial 
-
-            c = cost(p_test)
-            difference = c - best_cost 
-            difference_string = f"+{difference:<2e}" if difference > 0 else f"{difference:<2e}"
-            better_string = "✔" if difference < 0 else "✘"
-
-            print(f"{num:^{w_iter}d} | {trial:^{w_val}.3e} | {c:^{w_cost}.3e} | {difference_string:^{w_diff}} | {better_string:^{w_better}} ")
-
-            if difference < 0: 
-                best_cost = c 
-                best_val = trial 
-
-        p_best[idx] = best_val 
-        print(f" {name}: best={best_val:.3e}, cost={best_cost:3e}\n")
-        update_yaml(idx, best_val)
-
-    print(" Optimized parameter vector: ")
-    print(" ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ ")
-    for name, idx in sorted(sweep_map.items(), key=lambda x: x[1]):
-        print(f"    {name:4s} = {p_best[idx]:3e}")
-
-def update_yaml(idx, val): 
-    _, _, hamiltonian_params, *linblad_terms = load_params()
-    hamiltonian_params[idx] = val   
-    full_pvector = make_pvec(hamiltonian_params, *linblad_terms)
-    full_pvector[idx] = val
-
-    _update_param_yaml(
-        from_pkl=False, 
-        new_vals=np.array(full_pvector)
-    )
-    
-
-if __name__ == "__main__": 
-    main(n_search=120, sleep_time=120, sleep_every=20)
+x_scale = np.array([
+    1e-8,   # J       (≈3.3e-9 → 0.33)
+    1e-8,   # Aa1     (≈5.2e-8 → 0.52)
+    2e-7,   # Ab1     (≈1.9e-7 → 0.95)
+    1e-8,   # Aa2     (≈3.7e-8 → 0.37)
+    1e-7,   # Ab2     (≈1.0e-7 → 1.0)
+    1e-8,   # D1      (≈1.6e-8 → 1.6)
+    1e-9,   # D2      (≈1.8e-10 → 0.18)
+    1e1,    # B0      (≈0 → 0)
+    1.0,    # g_e     (≈2.002 → 2.0)
+    1.0,    # g_n1    (≈-1.09 → -1.1)
+    1.0,    # g_n2    (≈1.405 → 1.4)
+    1e8,    # nu      (≈2.00e8 → 2.0)
+    1e6,    # omega1  (≈4.89e5 → 0.49)
+    1e5,    # k_S     (≈9.87e4 → 0.99)
+    1e5,    # k_D     (≈4.78e4 → 0.48)
+    1e3,    # p       (≈8.19e2 → 0.82)
+    1.0     # B_mod   (≈3.99 → 4.0)
+], dtype=float)
