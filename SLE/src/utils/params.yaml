@@ -1,41 +1,41 @@
 exchange:
-  J:   1e-9                   # [eV]
+  J: 3.343578291330771e-09    # [eV]
 
 hyperfine:
-  Aa1: 5.2e-8                 # [eV]  
-  Ab1: 1.9e-7                 # [eV]  
-  Aa2: 3.7e-8                 # [eV]  
-  Ab2: 1.0e-7                 # [eV] 
+  Aa1: 1.627897473703958e-07  # [eV]  
+  Ab1: 1.6483042606965963e-07 # [eV]  
+  Aa2: 1.2213390506484495e-07 # [eV]  
+  Ab2: 1.178757319521051e-07  # [eV] 
 
 zeeman:
-  B0:   0.00                  # [G]    
-  g_e:  2.002319              # dimensionless
-  g_n1: -1.110104             # dimensionless
-  g_n2:  1.404738             # dimensionless
+  B0: 0.0                     # [G]    
+  g_e: 2.0023829589327446     # dimensionless
+  g_n1: -1.0901005205678895   # dimensionless
+  g_n2: 1.4045890711247189    # dimensionless
   mu_B: 5.7883818e-09         # [eV/G]
   mu_N: 3.1524512e-12         # [eV/G]
 
 zfs:
-  D1: 3.4e-9                    # [eV]
-  D2: 1e-12                   # [eV]
+  D1: 1.6076892782882613e-08    # [eV]
+  D2: 1.846630067259985e-10   # [eV]
 
 microwave:
-  nu:     2.00098e8           # [Hz]   
-  omega1: 2.00e5              # [Hz]   
+  nu: 200096369.62185085      # [Hz]   
+  omega1: 488867.3582514472   # [Hz]   
 
 constants:
-  h:     4.135667662e-15      # [eVs]
-  hbar:  6.58211e-16          # [eVs]
+  h: 4.135667662e-15          # [eVs]
+  hbar: 6.58211e-16           # [eVs]
 
 sle:
-  k_S: 1e5                    # [Hz]
-  k_D: 1e6                    # [Hz]
-  p:   1e3                    # dimensionless
+  k_S: 98692.62239509885      # [Hz]
+  k_D: 47830.22873673154      # [Hz]
+  p: 818.9550371090754        # dimensionless
 
-lockin: 
+lockin:
   f_mod: 1e3                  # [Hz]
-  B_mod: 4                    # [G pp]
+  B_mod: 3.9876353832115092   # [G pp]
 
-proportion: 
+proportion:
   A: 0.5e6
   I0: 0

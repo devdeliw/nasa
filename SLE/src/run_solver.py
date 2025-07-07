@@ -160,7 +160,7 @@ if __name__ == "__main__":
     plot_singlet_spectrum(
         bmin=-100, 
         bmax=+100, 
-        n_points=400, 
+        n_points=100, 
         pvec=pvec,
         modulate=True
     )

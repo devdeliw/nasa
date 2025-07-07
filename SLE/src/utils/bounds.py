@@ -1,5 +1,4 @@
 import numpy as np
-from run_solver import P_ORDER
 
 # lower bounds
 lower = np.array([
