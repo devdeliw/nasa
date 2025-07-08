@@ -23,7 +23,7 @@ def main(n_search: int = 30, sleep_every=20, sleep_time=120, log_csv=Path(__file
     log_csv.parent.mkdir(parents=True, exist_ok=True)
     fitter = _load_fitter(
         data_path       = Path.home()/"nasa/spectra/src/data/raw/[EDMR]_2G_3V_200MHz.pkl", 
-        n_points_per    = 100, 
+        n_points_per    = 50, 
         default_params  = True, 
         custom_params   = False, 
         n_jobs          = 5, 
@@ -86,7 +86,7 @@ def main(n_search: int = 30, sleep_every=20, sleep_time=120, log_csv=Path(__file
                 c = cost(p_test)
                 difference = c - best_cost 
                 difference_string = f"+{difference:<2e}" if difference > 0 else f"{difference:<2e}"
-                better_string = "✔" if difference < 0 else "✘"
+                better_string = "Y" if difference < 0 else "N"
 
                 print(f"{num:^{w_iter}d} | {trial:^{w_val}.3e} | {c:^{w_cost}.3e} | {difference_string:^{w_diff}} | {better_string:^{w_better}} ")
                 writer.writerow([name, num, f"{trial:.6e}", f"{c:.6e}", f"{difference:.6e}", better_string])
@@ -95,8 +95,7 @@ def main(n_search: int = 30, sleep_every=20, sleep_time=120, log_csv=Path(__file
                     best_cost = c 
                     best_val = trial 
 
-                if num_iterations % 50 == 0: 
-                    csvfile.flush()
+                csvfile.flush()
 
             p_best[idx] = best_val 
             print(f" {name}: best={best_val:.3e}, cost={best_cost:3e}\n")
@@ -121,7 +120,7 @@ def update_yaml(idx, val):
 
 if __name__ == "__main__": 
     main(
-        n_search=100,   # num search per parameter 
+        n_search=300,   # num search per parameter 
         sleep_time=120, # time computer sleeps (2 min)
         sleep_every=20  # every 20 steps computer sleeps 
     )
