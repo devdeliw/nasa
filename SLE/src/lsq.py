@@ -212,9 +212,7 @@ class EDMRLSQ:
         if n_points is not None and n_points < len(B):
             B = np.linspace(min(B), max(B), n_points)
         if not pvec:
-            with open(self._pkl_file, "rb") as f:
-                pvec = pickle.load(f)
-
+            pvec = self._p0_nl
         logger.info(f" Rendering Fitting Plot with {n_points} steps.")
         pvec_nl = pvec if pvec is not None else self.fitted_params
         dI = self.predict(B_array=B, pvec=pvec_nl)
@@ -243,8 +241,11 @@ class EDMRLSQ:
         return fig
 
     def _print_pkl_params(self): 
+        """
         with open(self._pkl_file, "rb") as f: 
-            params = pickle.load(f) 
+            params = pickle.load(f)
+        """
+        params = self._p0_nl
         for name, val in zip(fitter.param_names[2:], params):   
             logger.info(f" {name:<6} = {val:.3e}") 
         print("")
@@ -270,11 +271,11 @@ def _load_fitter(
     default_params: bool = True, 
     n_jobs=None,
     B_range=None, # (bmin, bmax) if not None, else entire data
-    custom_params=None, 
+    custom_params=np.array([]), 
     show_progress=True,
     verbose=True,
 ):
-    if not default_params and not custom_params: 
+    if not default_params and len(custom_params) == 0: 
         logger.error(
             "custom_params must be provided \
              if default_params=False."
@@ -376,17 +377,18 @@ if __name__ == "__main__":
 
     #_update_param_yaml()
 
+    A, I, params, ks, kd, p, B_mod = load_params()
     fitter = _load_fitter(
         data_path       = Path.home()/"nasa/spectra/src/data/raw/[EDMR]_2G_3V_200MHz.pkl", 
         n_points_per    = 50, 
-        default_params  = True, 
-        custom_params   = False, 
+        default_params  = False, 
+        custom_params   = make_fullpvec(params, ks, kd, p, B_mod, A, I), 
         n_jobs          = 5, 
         B_range         = (-50, 50), 
     )
 
     #fitter.fit()
     fitter._print_pkl_params() 
-    fitter.plot_best_fit()
+    fitter.plot_best_fit(n_points=50)
 
 
