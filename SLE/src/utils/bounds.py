@@ -45,6 +45,8 @@ upper = np.array([
 ], dtype=float)
 
 x_scale = np.array([
+    1e5,    # A 
+    1,      # I0
     1e-8,   # J
     1e-8,   # Aa1
     2e-7,   # Ab1

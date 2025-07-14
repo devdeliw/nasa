@@ -81,3 +81,11 @@ if __name__ == "__main__":
         output_file="spin_hamiltonian.pickle"
     )
 
+    H_SPIN_SEC = combine_spin_hamiltonians( 
+        zeeman_file = "zeeman.pickle", 
+        hyperfine_file = "hyperfine_sec.pickle", 
+        zfs_file = "zfs.pickle", 
+        exchange_file = "exchange.pickle", 
+        output_file = "spin_hamiltonian_secular.pickle"
+    )
+

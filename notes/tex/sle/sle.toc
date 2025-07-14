@@ -1,0 +1,14 @@
+\contentsline {section}{\numberline {1}The Stochastic Liouville Equation}{3}{}%
+\contentsline {subsection}{\numberline {1.1}Density Matrix Formalism}{3}{}%
+\contentsline {subsection}{\numberline {1.2}Quantum Liouville Equation}{3}{}%
+\contentsline {section}{\numberline {2}Solving the Stochastic Liouville Equation}{5}{}%
+\contentsline {subsection}{\numberline {2.1}Sylvester Form}{5}{}%
+\contentsline {section}{\numberline {3}Modeling Sylvester}{6}{}%
+\contentsline {subsection}{\numberline {3.1}Vectorization}{7}{}%
+\contentsline {subsubsection}{\numberline {3.1.1}Checks}{8}{}%
+\contentsline {paragraph}{1.\nobreakspace {}Dimension check.}{8}{}%
+\contentsline {paragraph}{2.\nobreakspace {}Parameter completeness.}{8}{}%
+\contentsline {paragraph}{3.\nobreakspace {}Spectral check.}{8}{}%
+\contentsline {paragraph}{4.\nobreakspace {}Structure check.}{9}{}%
+\contentsline {paragraph}{5.\nobreakspace {}Post-processing.}{9}{}%
+\contentsline {section}{\numberline {4}Connecting back to EDMR/NZFMR}{9}{}%

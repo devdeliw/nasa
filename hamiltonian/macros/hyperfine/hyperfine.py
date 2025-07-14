@@ -138,6 +138,16 @@ def convert_to_isotropic(H_sym: sp.Matrix) -> sp.Matrix:
     assert np.allclose(H_np, H_np.conj().T, atol=1e-12), "Hyperfine Hamiltonian is not Hermitian!"
     return H_iso
 
+def convert_to_secular(H_sym: sp.Matrix) -> sp.Matrix:
+    zero_transverse = {
+        A_a1x: 0, A_a1y: 0,
+        A_a2x: 0, A_a2y: 0,
+        A_b1x: 0, A_b1y: 0,
+        A_b2x: 0, A_b2y: 0,
+    }
+    H_sec_aniso = H_sym.subs(zero_transverse)
+    return convert_to_isotropic(H_sec_aniso)
+
 # Export to LaTeX
 def write_matrix_tex(matrix, filename, matrix_name="H"):
     latex_matrix = sp.latex(matrix)
@@ -160,6 +170,7 @@ if __name__ == '__main__':
 
     hf = HyperfineHamiltonian()
     H_iso = convert_to_isotropic(hf.H_coup)
+    H_secular   = convert_to_secular(hf.H_coup)
 
     folder = Path.home() / "nasa" / "hamiltonian" / "pickle"
     folder.mkdir(parents=True, exist_ok=True)
@@ -168,3 +179,8 @@ if __name__ == '__main__':
     with open(fname, "wb") as f:
         pickle.dump(H_iso, f)
         print(f"Hyperfine Hamiltonian saved to {fname}.")
+
+    fname = folder / "hyperfine_sec.pickle" 
+    with open(fname, "wb") as f: 
+        pickle.dump(H_secular, f) 
+        print(f"Secular Hyperfine Hamiltonian saved to {fname}")

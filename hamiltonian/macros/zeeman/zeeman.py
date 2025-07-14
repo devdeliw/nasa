@@ -22,9 +22,9 @@ nuclear_pairs = [
 ]
 
 # zeeman frequencies
-omega_e   = g_e  * mu_B * B0
-omega_n1  = g_n1 * mu_N * B0
-omega_n2  = g_n2 * mu_N * B0
+omega_e   = g_e  * mu_B * -abs(B0)
+omega_n1  = g_n1 * mu_N * -abs(B0)
+omega_n2  = g_n2 * mu_N * -abs(B0)
 
 # build the diagonal entries
 entries = []

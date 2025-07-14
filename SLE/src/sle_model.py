@@ -41,7 +41,7 @@ Sz_tot = sp.kronecker_product(Sz_e, I4)
 _SPIN = sp.Matrix(
     pickle.load(
         open(
-            Path.home()/"nasa/hamiltonian/pickle/effective.pickle", "rb"
+            Path.home()/"nasa/hamiltonian/pickle/spin_hamiltonian.pickle", "rb"
         )
     )
 )
@@ -78,15 +78,25 @@ def _make_solver(sign: int):
 
     """
     H = _SPIN
+    HZ = sp.Matrix(
+        pickle.load(
+            open(
+                Path.home()/"nasa/hamiltonian/pickle/spin_hamiltonian_secular.pickle", "rb"
+            )
+        )
+    )
 
-    # rotating wave approximation
+    if sign in (-1, +1):
+        H_drive = h*omega1 * Sx_tot
+
+        delta_nu_bs = omega1**2 / (2 * nu)
+        delta_nu_hf2 = 4*(Aa1**2) / nu
+        nu_eff = nu - delta_nu_bs - delta_nu_hf2
+
+        H_shift = -h * nu_eff * Sz_tot
+        H = HZ + sign*H_drive - H_shift
     if sign == 0:
-        H_drive = h*omega1 * Sx_tot      
-        H_shift = -h* nu   * Sz_tot      
-        H = H - H_drive - H_shift 
-    if sign == -1: 
-        H += 2*h*nu*Sz_tot 
-
+        H = _SPIN
     Lambda_S, Lambda_T = projection_operators()
     return SteadyStateSLESolver(
         H_sym   = sp.Matrix(H),
@@ -115,8 +125,9 @@ def _compute_block(args):
 
     i_block = np.empty_like(B_block, dtype=float)
     for j, B in enumerate(B_block):
-        subsB = { **subs_str, "B0": float(B) }
+        subsB = { **subs_str, "B0": float(B)}
         rho  = S_stat.rho(k_s=pvec[13], k_d=pvec[14], p=pvec[15], params=subsB)
+
         rho += 0.5 * S_plus .rho(k_s=pvec[13], k_d=pvec[14], p=pvec[15], params=subsB)
         rho += 0.5 * S_minus.rho(k_s=pvec[13], k_d=pvec[14], p=pvec[15], params=subsB)
         i_block[j] = np.real_if_close(np.trace(S_stat.Lambda_S @ rho))
@@ -190,11 +201,36 @@ def singlet_spectra(
         indices, i_block = _compute_block(args[0])
         i_rel[indices] = i_block
 
-    dI = np.gradient(i_rel, B_array, edge_order=2)
+    def lockin_exact(I_arr, B_arr, B_pp, *, n_phase=256, phase=0.0):
+        """
+        Ideal first-harmonic lock-in (in-phase, infinite time-constant).
+
+            I_arr   singlet population (same length and ordering as B_arr)
+            B_arr   static-field sweep (monotonic, uniform spacing)
+            B_pp    peak-to-peak modulation amplitude  [G]
+            n_phase discrete phase points per cycle    (resolution)
+
+        Returns X-channel lock-in trace on the same B grid.
+        """
+        A = B_pp                     # peak amplitude
+        θ = np.linspace(0.0, 2*np.pi, n_phase, endpoint=False)
+        sinθ = np.sin(θ + phase)           # reference & modulation waveform
+        ref  = sinθ
+        norm = 2.0 / n_phase
+
+        out = np.empty_like(I_arr, dtype=float)
+        for k, B0 in enumerate(B_arr):
+            B_inst = B0 + A * sinθ
+            I_inst = np.interp(B_inst, B_arr, I_arr,
+                               left=I_arr[0], right=I_arr[-1])
+            out[k] = norm * np.dot(I_inst, ref)
+        return out
+
+
     if modulate:
-        sig = (pvec[-1] / 2) / (B_array[1] - B_array[0])
-        return gaussian_filter1d(dI, sigma=sig, mode='nearest')
-    return dI
+        return lockin_exact(i_rel, B_array, Bmod)
+    return  np.gradient(i_rel, B_array, edge_order=2)
+
 
 def edmr_spectra(
         B_array: np.ndarray, pvec: np.ndarray, modulate: bool = True, 
@@ -216,7 +252,7 @@ def edmr_spectra(
                     A, I0, 
                     J, Aa1, Ab1, Aa2, Ab2,
                     D1, D2,
-                    B0, g_e, g_n1, g_n2,
+                    B, g_e, g_n1, g_n2,
                     nu, omega1,
                     kS, kD, p,
                     B_mod

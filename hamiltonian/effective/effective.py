@@ -32,7 +32,7 @@ if not (isinstance(H_static, sp.MatrixBase) and H_static.shape == (16,16)):
     raise ValueError("spin_hamiltonian.pickle must hold a 16×16 SymPy Matrix")
 
 # rotating wave approximation (RWA) terms 
-H_drive = h * omega1 * Sx_tot
+H_drive = 0.5 * h * omega1 * Sx_tot
 H_shift = -h * nu    * Sz_tot
 
 # full effective hamiltonian 

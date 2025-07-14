@@ -40,7 +40,7 @@ def load_params(
             **raw["zeeman"],
             **raw["zfs"],
             **raw["microwave"],
-            **raw["constants"],
+            **raw["constants"]
         }
     )
 

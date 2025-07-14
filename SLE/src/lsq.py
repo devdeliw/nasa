@@ -15,50 +15,17 @@ logger = logging.getLogger(__name__)
 class EDMRLSQ:
     """
     Fit EDMR spectra data via least-squares optimization.
-
-    Args:
-        * B (np.ndarray):
-            * Magnetic field sweep data.
-        * I (np.ndarray):
-            * Experimental current data.
-        * p0 (np.ndarray):
-            * Initial parameter guess (19-vector).
-        * lower (np.ndarray):
-            * Lower bounds for parameters.
-        * upper (np.ndarray):
-            * Upper bounds for parameters.
-        *edmr (callable):
-            * Function edmr_spectra(B_array, pvec, modulate=True).
-        * n_points_per (int):
-            * The number of steps to simulate EDMR spectra per lsq call.
-            * Defaults to 400 ~1 min/call if parallelized
-        * n_jobs (int):
-            * The number of threads to parallelize edmr_func across.
-            * Defaults to cpu_count(logical=False) (# of physical cores)
-
-    * result (OptimizeResult):
-        *  The result of least_squares after fitting.
+    A and I0 are now optimized directly, so the fitted vector is the full 19-parameter set.
     """
 
     def __init__(self, B_array, I_array, p0, lower, upper, edmr_func, n_points_per=None, n_jobs=None, show_progress=True, verbose=True):
-        self._p0_full = np.asarray(p0, dtype=float)
+        self._p0_full   = np.asarray(p0,    dtype=float)
         self._lower_full = np.asarray(lower, dtype=float)
         self._upper_full = np.asarray(upper, dtype=float)
 
-        self._p0_nl = self._p0_full[2:]
-        self._lower_nl = self._lower_full[2:]
-        self._upper_nl = self._upper_full[2:]
-
-        self._log_idx_nl = np.array([12, 13, 14, 15])
-
-        self._p0_nl = self._p0_nl.astype(float)
-        self._lower_nl = self._lower_nl.astype(float)
-        self._upper_nl = self._upper_nl.astype(float)
-
-        self._p0_nl[self._log_idx_nl] = np.log10(self._p0_nl[self._log_idx_nl])
-        self._lower_nl[self._log_idx_nl] = np.log10(self._lower_nl[self._log_idx_nl])
-        self._upper_nl[self._log_idx_nl] = np.log10(self._upper_nl[self._log_idx_nl])
-
+        self._p0_nl    = self._p0_full.copy()
+        self._lower_nl = self._lower_full.copy()
+        self._upper_nl = self._upper_full.copy()
         self.B = np.asarray(B_array, dtype=float)
         self.I = np.asarray(I_array, dtype=float)
         self.edmr = edmr_func
@@ -77,28 +44,8 @@ class EDMRLSQ:
 
         assert len(self._p0_full) == 19, "expected 19 parameters."
 
-    @staticmethod
-    def _solve_linear_params(S, I):
-        """
-        Given model trace S and current I return (A, I0).
-        Analytic solution.
-
-        """
-        X = np.column_stack((S, np.ones_like(S)))
-        coeff, *_ = np.linalg.lstsq(X, I, rcond=None)
-        return coeff
-
-    def _build_full_pvec(self, p_nl, A, I0):
-        full = np.empty_like(self._p0_full)
-        full[0] = A
-        full[1] = I0
-        full[2:] = p_nl
-        return full
-
     def _from_log(self, p):
-        p = p.copy()
-        p[self._log_idx_nl] = 10 ** p[self._log_idx_nl]
-        return p
+        raise NotImplementedError("_from_log is disabled")
 
     def _residuals(self, p_nl, alpha=1, save_pickle=True):
         self._nfev += 1
@@ -109,14 +56,13 @@ class EDMRLSQ:
         else:
             B_coarse = self.B
 
-        p_lin = self._from_log(p_nl)
-        dummy_full = self._build_full_pvec(p_lin, 1.0, 0.0)
-        S_coarse = self.edmr(B_coarse, dummy_full, modulate=True, n_jobs=self.n_jobs, show_progress=self._show_progress)
+        p_lin = p_nl
+        S_coarse = self.edmr(B_coarse, p_lin, modulate=True, n_jobs=self.n_jobs, show_progress=self._show_progress)
 
         spline = interp1d(B_coarse, S_coarse, kind="cubic", assume_sorted=True)
         S_pred = spline(self.B)
 
-        A_opt, I0_opt = self._solve_linear_params(S_pred, self.I)
+        A_opt, I0_opt = p_lin[0], p_lin[1]
         I_pred = A_opt * S_pred + I0_opt
 
         w = np.abs(np.gradient(self.I, self.B))
@@ -127,12 +73,10 @@ class EDMRLSQ:
                 with open(self._pkl_file, "wb") as f:
                     pickle.dump(p_lin, f)
                     logger.info(" Saved pickle file. ")
-            latest_full = self._build_full_pvec(p_lin, A_opt, I0_opt)
-
             if self._verbose:
                 print("")
                 logger.info(" Iteration %d ", iter_no)
-                for name, val in zip(self.param_names, latest_full):
+                for name, val in zip(self.param_names, p_lin):
                     logging.info(f" * {name:<6} = {val:.3e}")
                 print("")
 
@@ -189,18 +133,13 @@ class EDMRLSQ:
     def fitted_params(self):
         if self.result is None:
             raise RuntimeError("call fit() before accessing fitted_params.")
-        return self._from_log(self.result.x)
+        return self.result.x
 
     def predict(self, B_array=None, pvec=None):
         B_eval = np.asarray(B_array, dtype=float) if B_array is not None else self.B
-        p_nl = np.asarray(pvec, dtype=float) if pvec is not None else self.fitted_params
-
-        dummy_full = self._build_full_pvec(p_nl, 1.0, 0.0)
-        S = self.edmr(B_eval, dummy_full, modulate=True, n_jobs=self.n_jobs)
-        A_opt, I0_opt = self._solve_linear_params(
-            S,
-            self.I if B_array is None else np.interp(B_eval, self.B, self.I)
-        )
+        p_lin = self.fitted_params if pvec is None else np.asarray(pvec, float)
+        S = self.edmr(B_eval, p_lin, modulate=True, n_jobs=self.n_jobs)
+        A_opt, I0_opt = p_lin[0], p_lin[1]
         return A_opt * S + I0_opt
 
     def plot_best_fit(self, B_array=None, pvec=None, n_points: int = 500, save=True):
@@ -211,11 +150,10 @@ class EDMRLSQ:
 
         if n_points is not None and n_points < len(B):
             B = np.linspace(min(B), max(B), n_points)
-        if not pvec:
-            pvec = self._p0_nl
+
+        p_lin = self._p0_full if pvec is None else np.asarray(pvec, float)
+        dI = self.predict(B_array=B, pvec=p_lin)
         logger.info(f" Rendering Fitting Plot with {n_points} steps.")
-        pvec_nl = pvec if pvec is not None else self.fitted_params
-        dI = self.predict(B_array=B, pvec=pvec_nl)
 
         spline = interp1d(B, dI, kind="cubic", assume_sorted=True)
         dI = spline(self.B)
@@ -241,17 +179,12 @@ class EDMRLSQ:
         return fig
 
     def _print_pkl_params(self): 
-        """
-        with open(self._pkl_file, "rb") as f: 
-            params = pickle.load(f)
-        """
         params = self._p0_nl
-        for name, val in zip(fitter.param_names[2:], params):   
+        for name, val in zip(self.param_names, params):   
             logger.info(f" {name:<6} = {val:.3e}") 
         print("")
         return params
 
-# helper functions 
 def _load_full_params(): 
     A, I0, hamiltonian_params, ks, kd, pgen, B_mod = load_params() 
     p0_full = make_fullpvec(
@@ -270,15 +203,14 @@ def _load_fitter(
     n_points_per: int = 100, 
     default_params: bool = True, 
     n_jobs=None,
-    B_range=None, # (bmin, bmax) if not None, else entire data
+    B_range=None, 
     custom_params=np.array([]), 
     show_progress=True,
     verbose=True,
 ):
     if not default_params and len(custom_params) == 0: 
         logger.error(
-            "custom_params must be provided \
-             if default_params=False."
+            "custom_params must be provided              if default_params=False."
         ) 
         raise ValueError("custom_params not provided.")
 
@@ -294,8 +226,7 @@ def _load_fitter(
 
     if B_range: 
         B = np.array(B) 
-        I = np.array(I) 
-    
+        I = np.array(I)     
         mask = (B >= B_range[0]) & (B <= B_range[1]) 
         B = B[mask] 
         I = I[mask]
@@ -318,28 +249,11 @@ def _update_param_yaml(
     new_vals: np.ndarray = np.array([]),
     fitter: EDMRLSQ = _load_fitter(),
 ):
-    """
-    Updates the parameter file the fitter uses with custom parameters
-    or the latest stored pickle file from a previous run. 
-
-    Args: 
-        * from_pkl: bool 
-            * if True, just use update the param_file with the latest pickle. 
-            * Defaults to True.
-        * new_vals: np.ndarray
-            * if not `from_pkl`, this is the 17-vector custom param. 
-        * fitter: EDMRLSQ 
-            * just an instance of the class to access what pickle file it uses. 
-            * Defaults to generic instance from `_load_fitter()`.
-
-    """
-
-
     from ruamel.yaml import YAML 
     PARAM_FILE = Path(__file__).resolve().parent / "utils/params.yaml"
 
     if not from_pkl: 
-        assert len(new_vals) == 17, "new_vals length must be 17 if not from_pkl."
+        assert len(new_vals) == 19, "new_vals length must be 19 if not from_pkl."
     else: 
         with open(fitter._pkl_file, "rb") as f: 
             new_vals = pickle.load(f)
@@ -349,30 +263,29 @@ def _update_param_yaml(
     with open(PARAM_FILE) as fp: 
         cfg = yaml.load(fp) 
 
-    cfg['exchange']['J']               = float(new_vals[0])
-    cfg['hyperfine']['Aa1']            = float(new_vals[1])
-    cfg['hyperfine']['Ab1']            = float(new_vals[2])
-    cfg['hyperfine']['Aa2']            = float(new_vals[3])
-    cfg['hyperfine']['Ab2']            = float(new_vals[4])
-    cfg['zfs']['D1']                   = float(new_vals[5])
-    cfg['zfs']['D2']                   = float(new_vals[6])
-    cfg['zeeman']['B0']                = float(new_vals[7])
-    cfg['zeeman']['g_e']               = float(new_vals[8])
-    cfg['zeeman']['g_n1']              = float(new_vals[9])
-    cfg['zeeman']['g_n2']              = float(new_vals[10])
-    cfg['microwave']['nu']             = float(new_vals[11])
-    cfg['microwave']['omega1']         = float(new_vals[12])
-    cfg['sle']['k_S']                  = float(new_vals[13])
-    cfg['sle']['k_D']                  = float(new_vals[14])
-    cfg['sle']['p']                    = float(new_vals[15])
-    cfg['lockin']['B_mod']             = float(new_vals[16])
+    cfg['exchange']['J']               = float(new_vals[2])
+    cfg['hyperfine']['Aa1']            = float(new_vals[3])
+    cfg['hyperfine']['Ab1']            = float(new_vals[4])
+    cfg['hyperfine']['Aa2']            = float(new_vals[5])
+    cfg['hyperfine']['Ab2']            = float(new_vals[6])
+    cfg['zfs']['D1']                   = float(new_vals[7])
+    cfg['zfs']['D2']                   = float(new_vals[8])
+    cfg['zeeman']['B0']                = float(new_vals[9])
+    cfg['zeeman']['g_e']               = float(new_vals[10])
+    cfg['zeeman']['g_n1']              = float(new_vals[11])
+    cfg['zeeman']['g_n2']              = float(new_vals[12])
+    cfg['microwave']['nu']             = float(new_vals[13])
+    cfg['microwave']['omega1']         = float(new_vals[14])
+    cfg['sle']['k_S']                  = float(new_vals[15])
+    cfg['sle']['k_D']                  = float(new_vals[16])
+    cfg['sle']['p']                    = float(new_vals[17])
+    cfg['lockin']['B_mod']             = float(new_vals[18])
 
     with open(PARAM_FILE, 'w') as fp:
         yaml.dump(cfg, fp)
         logger.info(" params.yaml overwritten.")
         print("")
     
-
 if __name__ == "__main__":
 
     #_update_param_yaml()
@@ -383,12 +296,10 @@ if __name__ == "__main__":
         n_points_per    = 50, 
         default_params  = False, 
         custom_params   = make_fullpvec(params, ks, kd, p, B_mod, A, I), 
-        n_jobs          = 5, 
-        B_range         = (-50, 50), 
+        n_jobs          = 2, 
+        B_range         = (-140, 140), 
     )
-
     #fitter.fit()
     fitter._print_pkl_params() 
-    fitter.plot_best_fit(n_points=50)
-
+    fitter.plot_best_fit(n_points=100)
 
