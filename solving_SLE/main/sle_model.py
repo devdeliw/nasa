@@ -290,6 +290,7 @@ def compute_edmr_spectra(
         parameters: dict[str, float], 
         modulate: bool, 
         n_jobs: int, 
+        blocks_per_core: int,
         show_progress: bool, 
 ) -> np.ndarray:
     """ 
@@ -320,7 +321,7 @@ def compute_edmr_spectra(
         parameters=parameters,
         modulate=modulate, 
         n_jobs=n_jobs,
-        blocks_per_core=8,
+        blocks_per_core=blocks_per_core,
         show_progress=show_progress
     ) 
     return parameters["A"] * dI + parameters["I0"] 

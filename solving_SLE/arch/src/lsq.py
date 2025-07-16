@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class EDMRLSQ:
     """
     Fit EDMR spectra data via least-squares optimization.
-    A and I0 are now optimized directly, so the fitted vector is the full 19-parameter set.
+
     """
 
     def __init__(self, B_array, I_array, p0, lower, upper, edmr_func, n_points_per=None, n_jobs=None, show_progress=True, verbose=True):

@@ -5,16 +5,16 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__) 
 
-PARAM_KEYS = {
-    "proportion": "A, I0", 
-    "exchange": "J", 
-    "hyperfine": "Aa1, Aa2, Ab1, Ab2", 
-    "zeeman": "g_e, g_n1, g_n2", 
-    "zfs": "D1, D2", 
-    "microwave": "nu, omega1", 
-    "sle": "k_S, k_D, p", 
-    "lockin": "B_mod", 
-    "constants": "h, hbar, mu_B, mu_N",
+PARAMETER_KEYS = {
+    "proportion":   ["A", "I0"], 
+    "exchange":     ["J"], 
+    "hyperfine":    ["Aa1", "Aa2", "Ab1", "Ab2"], 
+    "zeeman":       ["g_e", "g_n1", "g_n2"], 
+    "zfs":          ["D1", "D2"], 
+    "microwave":    ["nu", "omega1"], 
+    "sle":          ["k_S", "k_D", "p"], 
+    "lockin":       ["B_mod"], 
+    "constants":    ["h", "hbar", "mu_B", "mu_N"],
 }
 
 def load_params( 
@@ -48,7 +48,7 @@ def load_params(
 
             logger.error(f"`{key}` not found in params.") 
             logger.error(f"`{param_file}` should have: ")
-            print(PARAM_KEYS)
+            print(PARAMETER_KEYS)
             raise KeyError(f"`{key}` not found in params.")
 
     parameters = flatten( 

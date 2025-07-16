@@ -1,6 +1,6 @@
 from __future__ import annotations 
  
-import logging 
+import logging, os
 import numpy as np 
 import matplotlib.pyplot as plt 
 
@@ -17,7 +17,9 @@ Key: value dictionaries will be used whenever possible.
 This `PARAMETER_ORDER` will only be used as a check when 
 building the parameter vector in the future fitting routines. 
 
-""" 
+"""
+
+PARAMETER_FILE = Path(os.getcwd()).parent / "utils/params.yaml"
 
 PARAMETER_ORDER = [
     "A", "I0",                      # proportion
@@ -51,6 +53,13 @@ def _convert_dict_to_theta(parameters: dict[str, float]) -> np.ndarray:
     for idx, name in enumerate(PARAMETER_ORDER): 
         parameter_vector[idx] = parameters[name] 
     return parameter_vector 
+
+# unused here, will be used in fitting routines
+def _convert_theta_to_dict(parameters: np.ndarray) -> dict[str, float]: 
+    dict_params = {}
+    for idx, value in enumerate(parameters): 
+        dict_params[PARAMETER_ORDER[idx]] = value
+    return  dict_params
 
 def plot_singlet_spectra(
     bmin: float, 
@@ -147,8 +156,6 @@ def plot_singlet_spectra(
     return fig 
 
 
-
-
 if __name__ == "__main__": 
     plot_singlet_spectra( 
         bmin=-85, 
@@ -158,7 +165,7 @@ if __name__ == "__main__":
         n_jobs=2, 
         blocks_per_core=8, 
         modulate=True, 
-        outdir=Path("./media/"), 
+        outdir=Path("../media/"), 
         save=True, 
     )
 

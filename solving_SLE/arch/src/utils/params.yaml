@@ -21,7 +21,7 @@ zfs:
 
 microwave:
   nu:  2.015e8     # [Hz]   
-  omega1: 100259.44575061026  # [Hz]   
+  omega1: 150259.44575061026  # [Hz]   
 
 constants:
   h: 4.135667662e-15          # [eVs]
